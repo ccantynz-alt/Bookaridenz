@@ -8,6 +8,7 @@ import GoogleReviews from '../GoogleReviews'
 export const COUNTRIES = {
   australia: {
     flag: '🇦🇺', name: 'Australia',
+    image: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=1920&q=80', imageAlt: 'Sydney Opera House and harbour, Australia',
     title1: 'Flying From Australia', title2: 'to New Zealand?',
     subtitle: "It's a short hop across the Tasman — make the Auckland end just as easy. Your private transfer is booked before you finish your coffee.",
     seoTitle: 'Australia to New Zealand — Auckland Airport Transfers',
@@ -16,6 +17,7 @@ export const COUNTRIES = {
   },
   china: {
     flag: '🇨🇳', name: 'China',
+    image: 'https://images.unsplash.com/photo-1508804185872-d7badad00f7d?auto=format&fit=crop&w=1920&q=80', imageAlt: 'Great Wall of China',
     title1: '从中国飞往新西兰?', title2: 'Flying From China?',
     subtitle: '用中文在线预订您的奥克兰机场专车接送 — 固定价格，航班追踪，全程门到门。Book your Auckland transfer in Chinese before you fly.',
     seoTitle: 'China to New Zealand — 奥克兰机场接送 Auckland Airport Transfers',
@@ -24,6 +26,7 @@ export const COUNTRIES = {
   },
   japan: {
     flag: '🇯🇵', name: 'Japan',
+    image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1920&q=80', imageAlt: 'Japanese temple and cherry blossom',
     title1: '日本からニュージーランドへ?', title2: 'Flying From Japan?',
     subtitle: '日本語でオークランド空港送迎を事前予約。固定料金、フライト追跡、ドア・ツー・ドア。Book your Auckland transfer in Japanese before departure.',
     seoTitle: 'Japan to New Zealand — オークランド空港送迎 Auckland Transfers',
@@ -32,6 +35,7 @@ export const COUNTRIES = {
   },
   'south-korea': {
     flag: '🇰🇷', name: 'South Korea',
+    image: 'https://images.unsplash.com/photo-1538485399081-7191377e8241?auto=format&fit=crop&w=1920&q=80', imageAlt: 'Seoul city skyline, South Korea',
     title1: '한국에서 뉴질랜드로?', title2: 'Flying From Korea?',
     subtitle: '한국어로 오클랜드 공항 픽업을 미리 예약하세요. 고정 요금, 항공편 추적, 도어 투 도어. Book your Auckland transfer in Korean before you fly.',
     seoTitle: 'Korea to New Zealand — 오클랜드 공항 픽업 Auckland Transfers',
@@ -40,6 +44,7 @@ export const COUNTRIES = {
   },
   singapore: {
     flag: '🇸🇬', name: 'Singapore',
+    image: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=1920&q=80', imageAlt: 'Singapore Marina Bay skyline',
     title1: 'Flying From Singapore', title2: 'to New Zealand?',
     subtitle: 'Direct flights land in Auckland daily — have a private transfer waiting at arrivals, booked online before you leave Changi.',
     seoTitle: 'Singapore to New Zealand — Auckland Airport Transfers',
@@ -48,6 +53,7 @@ export const COUNTRIES = {
   },
   usa: {
     flag: '🇺🇸', name: 'United States',
+    image: 'https://images.unsplash.com/photo-1485738422979-f5c462d49f74?auto=format&fit=crop&w=1920&q=80', imageAlt: 'New York City skyline, USA',
     title1: 'Flying From the USA', title2: 'to New Zealand?',
     subtitle: "After 13 hours over the Pacific, the last thing you want is a taxi line. Your private driver is waiting at Auckland arrivals — booked from home in 60 seconds.",
     seoTitle: 'USA to New Zealand — Auckland Airport Transfers',
@@ -56,6 +62,7 @@ export const COUNTRIES = {
   },
   uk: {
     flag: '🇬🇧', name: 'United Kingdom',
+    image: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1920&q=80', imageAlt: 'London Big Ben and Westminster, UK',
     title1: 'Flying From the UK', title2: 'to New Zealand?',
     subtitle: "It's the longest trip you'll ever take — end it the easy way. A private driver at Auckland arrivals, booked from the UK in 60 seconds.",
     seoTitle: 'UK to New Zealand — Auckland Airport Transfers',
@@ -64,6 +71,7 @@ export const COUNTRIES = {
   },
   germany: {
     flag: '🇩🇪', name: 'Germany',
+    image: 'https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=1920&q=80', imageAlt: 'Berlin cityscape, Germany',
     title1: 'Flying From Germany', title2: 'to New Zealand?',
     subtitle: 'New Zealand is the adventure of a lifetime — start it with German-grade punctuality. Your private transfer, confirmed before you leave home.',
     seoTitle: 'Germany to New Zealand — Auckland Airport Transfers',
@@ -72,6 +80,7 @@ export const COUNTRIES = {
   },
   france: {
     flag: '🇫🇷', name: 'France',
+    image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1920&q=80', imageAlt: 'Eiffel Tower, Paris, France',
     title1: 'Vous arrivez de France', title2: 'en Nouvelle-Zélande?',
     subtitle: 'Réservez votre transfert privé depuis l\'aéroport d\'Auckland en français, avant même de décoller. Prix fixe, suivi de vol, porte à porte.',
     seoTitle: 'France to New Zealand — Transferts Aéroport Auckland',
@@ -102,9 +111,13 @@ export default function CountryLanding({ country }) {
       <PageMeta title={c.seoTitle} description={c.seoDesc} />
 
       {/* ── HERO ────────────────────────────────────────────── */}
-      <section className="relative min-h-[70vh] flex items-center overflow-hidden pt-24 pb-16">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(212,175,55,0.18),transparent_55%)]" />
+      <section className="relative min-h-[80vh] flex items-center overflow-hidden pt-24 pb-16">
+        <div className="absolute inset-0">
+          <img src={c.image} alt={c.imageAlt} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(212,175,55,0.15),transparent_55%)]" />
+        </div>
         <div className="container-max px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-3xl">
             <motion.div initial="hidden" animate="visible" variants={fadeUp}>

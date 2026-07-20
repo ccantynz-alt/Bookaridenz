@@ -11,6 +11,7 @@ import { COUNTRIES } from './CountryLanding'
 const AUDIENCES = {
   'international-visitors': {
     icon: Globe,
+    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1920&q=80', imageAlt: 'The connected world — Earth at night from space',
     badge: 'Welcoming the World to New Zealand',
     title1: 'Your First Ride',
     title2: 'in New Zealand',
@@ -28,6 +29,7 @@ const AUDIENCES = {
   },
   'student-transfers': {
     icon: GraduationCap,
+    image: 'https://images.unsplash.com/photo-1522199873717-bc67b1a5e32b?auto=format&fit=crop&w=1920&q=80', imageAlt: 'Traveller arriving at Auckland Airport',
     badge: 'Trusted by Students & Parents Worldwide',
     title1: 'Starting University',
     title2: 'in New Zealand?',
@@ -45,6 +47,7 @@ const AUDIENCES = {
   },
   'corporate-transfers': {
     icon: Briefcase,
+    image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1920&q=80', imageAlt: 'Professional transfer vehicle',
     badge: 'Executive Ground Transport',
     title1: 'Business Travel,',
     title2: 'Handled',
@@ -62,6 +65,7 @@ const AUDIENCES = {
   },
   'medical-professionals': {
     icon: Stethoscope,
+    image: 'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?auto=format&fit=crop&w=1920&q=80', imageAlt: 'Beautiful New Zealand landscape',
     badge: 'For Healthcare Heroes',
     title1: 'Doctors & Nurses,',
     title2: 'We’ve Got You',
@@ -79,6 +83,7 @@ const AUDIENCES = {
   },
   'travel-agents': {
     icon: Handshake,
+    image: 'https://images.unsplash.com/photo-1580541631950-7282082b53ce?auto=format&fit=crop&w=1920&q=80', imageAlt: 'Ship sailing at sunset',
     badge: 'Partner With Us',
     title1: 'Your Ground Transport',
     title2: 'Partner in NZ',
@@ -117,9 +122,13 @@ export default function AudienceLanding({ audience }) {
       <PageMeta title={a.seoTitle} description={a.seoDesc} />
 
       {/* ── HERO ────────────────────────────────────────────── */}
-      <section className="relative min-h-[70vh] flex items-center overflow-hidden pt-24 pb-16">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-900" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(212,175,55,0.18),transparent_55%)]" />
+      <section className="relative min-h-[80vh] flex items-center overflow-hidden pt-24 pb-16">
+        <div className="absolute inset-0">
+          <img src={a.image} alt={a.imageAlt} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(212,175,55,0.15),transparent_55%)]" />
+        </div>
 
         <div className="container-max px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="max-w-3xl">
