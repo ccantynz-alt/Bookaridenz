@@ -138,6 +138,35 @@ export default function CruiseTransfers() {
         </div>
       </section>
 
+      {/* ── REAL FLEET ──────────────────────────────────────── */}
+      <section className="py-24 bg-white">
+        <div className="container-max px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
+            <div className="order-2 lg:order-1">
+              <div className="inline-flex items-center gap-2 bg-gold/10 border border-gold/30 rounded-full px-4 py-2 mb-6">
+                <Star className="w-4 h-4 text-gold fill-gold" />
+                <span className="text-gray-700 font-medium text-sm">Not a stock photo — that's our van</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-5">This Is Us, Dockside</h2>
+              <p className="text-gray-600 text-lg leading-relaxed mb-4">
+                Our 11-seater vans and luggage trailers meet ships at Auckland's cruise terminal every sailing season. Your driver is waiting when you disembark — no shuttle queues, no taxi lines with all your luggage.
+              </p>
+              <p className="text-gray-600 text-lg leading-relaxed">
+                Straight from the gangway to your hotel, the airport, or a day trip to Hobbiton before you sail.
+              </p>
+            </div>
+            <div className="order-1 lg:order-2">
+              <img
+                src="/images/cruise-van-ship.jpg"
+                alt="Book A Ride van and luggage trailer at the Auckland cruise ship terminal"
+                className="rounded-3xl shadow-2xl w-full h-[420px] object-cover border-4 border-white"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── WHY US ──────────────────────────────────────────── */}
       <section className="py-24 bg-white">
         <div className="container-max px-4 sm:px-6 lg:px-8">

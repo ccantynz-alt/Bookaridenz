@@ -69,7 +69,7 @@ export default function HobbitonTransfers() {
       <section className="relative min-h-[80vh] flex items-center overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=1920&q=80"
+            src="https://images.unsplash.com/photo-1584956861988-913b8c1c7270?auto=compress&cs=tinysrgb&w=1920&q=80"
             alt="Hobbiton Movie Set — iconic hobbit hole with round green door"
             className="w-full h-full object-cover"
           />
