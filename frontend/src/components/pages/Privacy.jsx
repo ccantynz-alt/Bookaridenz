@@ -75,7 +75,7 @@ export default function Privacy() {
             <p>For any privacy-related questions or requests:</p>
             <ul>
               <li>Email: <a href="mailto:info@bookaride.co.nz" className="text-gold hover:underline">info@bookaride.co.nz</a></li>
-              <li>Phone: <a href="tel:+6421880793" className="text-gold hover:underline">021 880 793</a></li>
+              
             </ul>
           </Section>
 

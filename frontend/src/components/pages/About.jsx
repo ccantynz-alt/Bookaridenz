@@ -1,8 +1,10 @@
 import { Shield, Award, Clock, Heart } from 'lucide-react'
+import PageMeta from '../PageMeta'
 
 export default function About() {
   return (
     <div className="section-padding">
+      <PageMeta title="About Us" description="Book A Ride NZ is Auckland's trusted private transfer service — professional drivers, premium vehicles, and thousands of happy customers from New Zealand and around the world." />
       <div className="container-max max-w-4xl">
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">About BookARide</h1>
 

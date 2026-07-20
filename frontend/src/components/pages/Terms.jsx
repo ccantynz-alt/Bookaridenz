@@ -25,7 +25,7 @@ export default function Terms() {
               <li><strong>More than 24 hours before pickup:</strong> Full refund, no cancellation fee.</li>
               <li><strong>Less than 24 hours before pickup:</strong> No refund. You may reschedule at our discretion.</li>
               <li><strong>No-shows:</strong> No refund will be issued if the passenger is not at the agreed pickup location.</li>
-              <li>To cancel, contact us by phone (021 880 793) or email (info@bookaride.co.nz) with your booking reference number.</li>
+              <li>To cancel, contact us by email (info@bookaride.co.nz) with your booking reference number.</li>
             </ul>
           </Section>
 
@@ -71,7 +71,7 @@ export default function Terms() {
 
           <div className="pt-6 border-t border-gray-200 text-sm text-gray-400">
             <p>BookARide NZ · Auckland, New Zealand</p>
-            <p><a href="tel:+6421880793" className="text-gold hover:underline">021 880 793</a> · <a href="mailto:info@bookaride.co.nz" className="text-gold hover:underline">info@bookaride.co.nz</a></p>
+            <p><a href="mailto:info@bookaride.co.nz" className="text-gold hover:underline">info@bookaride.co.nz</a></p>
           </div>
         </div>
       </div>

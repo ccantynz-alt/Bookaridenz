@@ -1,8 +1,11 @@
-import { Phone, Mail, MapPin, Clock } from 'lucide-react'
+import { Mail, MapPin, Clock, Calendar } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import PageMeta from '../PageMeta'
 
 export default function Contact() {
   return (
     <div className="section-padding">
+      <PageMeta title="Contact" description="Get in touch with Book A Ride NZ. Book online 24/7 with instant pricing, or email us — we respond fast, every day of the year." />
       <div className="container-max max-w-4xl">
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Contact Us</h1>
         <p className="text-gray-500 mb-10">
@@ -10,13 +13,13 @@ export default function Contact() {
         </p>
 
         <div className="grid sm:grid-cols-2 gap-6">
-          <a href="tel:+6421880793" className="flex items-start gap-4 p-6 rounded-xl bg-gray-50 hover:bg-gold-50 transition-colors group">
-            <Phone className="w-6 h-6 text-gold mt-0.5" />
+          <Link to="/book-now" className="flex items-start gap-4 p-6 rounded-xl bg-gray-50 hover:bg-gold-50 transition-colors group">
+            <Calendar className="w-6 h-6 text-gold mt-0.5" />
             <div>
-              <h3 className="font-semibold text-gray-900 group-hover:text-gold transition-colors">Phone</h3>
-              <p className="text-gray-500 text-sm">021 880 793</p>
+              <h3 className="font-semibold text-gray-900 group-hover:text-gold transition-colors">Book Online 24/7</h3>
+              <p className="text-gray-500 text-sm">Instant pricing & confirmation</p>
             </div>
-          </a>
+          </Link>
           <a href="mailto:info@bookaride.co.nz" className="flex items-start gap-4 p-6 rounded-xl bg-gray-50 hover:bg-gold-50 transition-colors group">
             <Mail className="w-6 h-6 text-gold mt-0.5" />
             <div>

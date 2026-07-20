@@ -10,6 +10,7 @@ import api from '../../lib/api'
 import AddressInput from '../booking/AddressInput'
 import DateTimePicker from '../booking/DateTimePicker'
 import PriceBreakdown from '../booking/PriceBreakdown'
+import PageMeta from '../PageMeta'
 
 const STEPS = ['Trip Details', 'Your Details', 'Confirm & Pay']
 
@@ -161,6 +162,7 @@ export default function BookNow() {
 
   return (
     <div className="min-h-[calc(100vh-88px)] bg-gradient-to-br from-gray-50 to-white py-12">
+      <PageMeta title="Book Your Transfer — Instant Price" description="Get a live price for your Auckland airport transfer and book in 60 seconds. Fixed rates, secure Stripe checkout, instant email and SMS confirmation." />
       <div className="container-max px-4 sm:px-6 lg:px-8 max-w-3xl">
 
         {/* Header */}

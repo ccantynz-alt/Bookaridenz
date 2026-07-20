@@ -1,21 +1,24 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, Phone } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '../../lib/cn'
-
-const NAV_LINKS = [
-  { label: 'Home', path: '/' },
-  { label: 'Services', path: '/services' },
-  { label: 'Hobbiton', path: '/hobbiton-transfers' },
-  { label: 'Cruise', path: '/cruise-transfers' },
-  { label: 'About', path: '/about' },
-  { label: 'Contact', path: '/contact' },
-]
+import LanguageSelector from '../LanguageSelector'
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
+  const { t } = useTranslation()
+
+  const NAV_LINKS = [
+    { label: t('nav.home'), path: '/' },
+    { label: t('nav.services'), path: '/services' },
+    { label: t('nav.hobbiton'), path: '/hobbiton-transfers' },
+    { label: t('nav.cruise'), path: '/cruise-transfers' },
+    { label: t('nav.about'), path: '/about' },
+    { label: t('nav.contact'), path: '/contact' },
+  ]
 
   useEffect(() => {
     function onScroll() {
@@ -84,23 +87,14 @@ export default function Header() {
             ))}
           </div>
 
-          {/* Desktop CTA + phone */}
-          <div className="hidden md:flex items-center gap-4">
-            <a
-              href="tel:+6421880793"
-              className={cn(
-                'flex items-center gap-1.5 text-sm font-medium transition-colors',
-                isTransparent ? 'text-white/80 hover:text-gold' : 'text-gray-500 hover:text-gold'
-              )}
-            >
-              <Phone className="w-3.5 h-3.5" />
-              021 880 793
-            </a>
+          {/* Desktop CTA */}
+          <div className="hidden md:flex items-center gap-2">
+            <LanguageSelector light={isTransparent} />
             <Link
               to="/book-now"
               className="bg-gold hover:bg-gold-500 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-all duration-200 shadow-sm hover:shadow-md"
             >
-              Book a Ride
+              {t('nav.bookRide')}
             </Link>
           </div>
 
@@ -137,12 +131,15 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+            <div className="px-2 py-1">
+              <LanguageSelector />
+            </div>
             <Link
               to="/book-now"
               onClick={() => setMobileOpen(false)}
               className="block w-full text-center bg-gold hover:bg-gold-500 text-white font-semibold px-4 py-3 rounded-lg transition-all duration-200 mt-2"
             >
-              Book a Ride
+              {t('nav.bookRide')}
             </Link>
           </div>
         )}

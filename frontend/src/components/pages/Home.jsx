@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
-import { ArrowRight, Plane, MapPin, Star, Check, Shield, Clock, Award, Users, Calendar, Phone, Globe, Zap } from 'lucide-react'
+import { ArrowRight, Plane, MapPin, Star, Check, Shield, Clock, Award, Users, Calendar, Globe, Zap } from 'lucide-react'
+import PageMeta from '../PageMeta'
 
 const SERVICES = [
   { icon: Plane, title: 'Airport Shuttle', description: 'Shared and private shuttle services to Auckland, Hamilton & Whangarei airports.', features: ['Door-to-door pickup', 'Flight monitoring', 'All hours covered'] },
@@ -41,6 +43,7 @@ const fadeUp = {
 
 export default function Home() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [quote, setQuote] = useState({ pickup: '', dropoff: '' })
 
   const goToQuote = (e) => {
@@ -53,6 +56,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
+      <PageMeta title={null} description="Premium airport transfers across Auckland — private door-to-door shuttles, Hobbiton tours and cruise terminal transfers. Instant online pricing, fixed rates, international bookings welcome." />
 
       {/* ── HERO ────────────────────────────────────────────── */}
       <section className="relative min-h-[calc(100vh-20px)] flex items-center overflow-hidden">
@@ -74,11 +78,11 @@ export default function Home() {
               <div className="flex flex-wrap gap-3 mb-8">
                 <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
                   <Star className="w-4 h-4 text-gold fill-gold" />
-                  <span className="text-white/90 font-medium text-sm">5-Star Rated Airport Transfers</span>
+                  <span className="text-white/90 font-medium text-sm">{t('hero.badge5star')}</span>
                 </div>
                 <div className="inline-flex items-center gap-2 bg-gold/20 backdrop-blur-sm border border-gold/40 rounded-full px-4 py-2">
                   <Globe className="w-4 h-4 text-gold" />
-                  <span className="text-white/90 font-medium text-sm">International Bookings Welcome</span>
+                  <span className="text-white/90 font-medium text-sm">{t('hero.badgeIntl')}</span>
                 </div>
               </div>
             </motion.div>
@@ -90,9 +94,9 @@ export default function Home() {
               variants={fadeUp}
               className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 leading-[1.1] tracking-tight"
             >
-              Premium Airport
+              {t('hero.title1')}
               <br />
-              <span className="text-gold">Transfers</span>
+              <span className="text-gold">{t('hero.title2')}</span>
             </motion.h1>
 
             <motion.p
@@ -102,7 +106,7 @@ export default function Home() {
               variants={fadeUp}
               className="text-xl sm:text-2xl text-white/80 mb-10 leading-relaxed max-w-xl"
             >
-              Arrive in comfort, style, and safety. Auckland's most trusted transfer service.
+              {t('hero.subtitle')}
             </motion.p>
 
             <motion.div
@@ -116,14 +120,14 @@ export default function Home() {
                 to="/book-now"
                 className="inline-flex items-center justify-center gap-3 h-14 bg-gold hover:bg-gold-500 text-white font-semibold text-lg px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 group"
               >
-                Book Your Ride
+                {t('hero.bookYourRide')}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
               </Link>
               <Link
                 to="/services"
                 className="inline-flex items-center justify-center h-14 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white font-semibold text-lg px-8 rounded-xl border border-white/20 transition-all duration-200"
               >
-                View Services
+                {t('hero.viewServices')}
               </Link>
             </motion.div>
 
@@ -135,10 +139,10 @@ export default function Home() {
               className="flex flex-wrap items-center gap-6 text-white/70 text-sm"
             >
               {[
-                { icon: Shield, label: 'Fully Insured' },
-                { icon: Clock, label: '24/7 Service' },
-                { icon: Check, label: 'Fixed Prices — No Surge' },
-                { icon: Plane, label: 'Flight Tracking Included' },
+                { icon: Shield, label: t('hero.chipInsured') },
+                { icon: Clock, label: t('hero.chip247') },
+                { icon: Check, label: t('hero.chipFixed') },
+                { icon: Plane, label: t('hero.chipFlight') },
               ].map(({ icon: Icon, label }) => (
                 <div key={label} className="flex items-center gap-2">
                   <Icon className="w-4 h-4 text-gold" />
@@ -161,33 +165,33 @@ export default function Home() {
             >
               <div className="flex items-center gap-2 mb-1">
                 <Zap className="w-5 h-5 text-gold" />
-                <h2 className="text-white font-bold text-xl">Get an Instant Price</h2>
+                <h2 className="text-white font-bold text-xl">{t('quote.title')}</h2>
               </div>
-              <p className="text-white/60 text-sm mb-6">Live pricing — book online in 60 seconds</p>
+              <p className="text-white/60 text-sm mb-6">{t('quote.subtitle')}</p>
 
               <label className="block mb-4">
-                <span className="text-white/70 text-xs font-semibold uppercase tracking-wide">Pickup</span>
+                <span className="text-white/70 text-xs font-semibold uppercase tracking-wide">{t('quote.pickup')}</span>
                 <div className="relative mt-1.5">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gold" />
                   <input
                     type="text"
                     value={quote.pickup}
                     onChange={(e) => setQuote((q) => ({ ...q, pickup: e.target.value }))}
-                    placeholder="Pickup address or hotel"
+                    placeholder={t('quote.pickupPh')}
                     className="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-10 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
                   />
                 </div>
               </label>
 
               <label className="block mb-6">
-                <span className="text-white/70 text-xs font-semibold uppercase tracking-wide">Drop-off</span>
+                <span className="text-white/70 text-xs font-semibold uppercase tracking-wide">{t('quote.dropoff')}</span>
                 <div className="relative mt-1.5">
                   <Plane className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gold" />
                   <input
                     type="text"
                     value={quote.dropoff}
                     onChange={(e) => setQuote((q) => ({ ...q, dropoff: e.target.value }))}
-                    placeholder="Airport, cruise terminal, anywhere"
+                    placeholder={t('quote.dropoffPh')}
                     className="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-10 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
                   />
                 </div>
@@ -197,13 +201,13 @@ export default function Home() {
                 type="submit"
                 className="w-full inline-flex items-center justify-center gap-2 h-13 py-3.5 bg-gold hover:bg-gold-500 text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 group"
               >
-                Get Instant Price
+                {t('quote.cta')}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
               </button>
 
               <div className="flex items-center justify-center gap-4 mt-4 text-white/50 text-xs">
-                <span className="flex items-center gap-1"><Check className="w-3.5 h-3.5 text-gold" /> No account needed</span>
-                <span className="flex items-center gap-1"><Check className="w-3.5 h-3.5 text-gold" /> Secure Stripe checkout</span>
+                <span className="flex items-center gap-1"><Check className="w-3.5 h-3.5 text-gold" /> {t('quote.noAccount')}</span>
+                <span className="flex items-center gap-1"><Check className="w-3.5 h-3.5 text-gold" /> {t('quote.secure')}</span>
               </div>
             </form>
           </motion.div>
@@ -217,10 +221,10 @@ export default function Home() {
             className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-16 sm:mt-20"
           >
             {[
-              { value: '10,000+', label: 'Happy Clients' },
-              { value: '60s', label: 'To Book Online' },
-              { value: '5★', label: 'Rated Service' },
-              { value: '24/7', label: 'Every Day of the Year' },
+              { value: '10,000+', label: t('stats.clients') },
+              { value: '60s', label: t('stats.bookTime') },
+              { value: '5★', label: t('stats.rated') },
+              { value: '24/7', label: t('stats.everyday') },
             ].map(({ value, label }) => (
               <div
                 key={label}
@@ -447,12 +451,12 @@ export default function Home() {
               >
                 Book Now <ArrowRight className="w-5 h-5" />
               </Link>
-              <a
-                href="tel:+6421880793"
+              <Link
+                to="/services"
                 className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/15 text-white font-semibold px-10 py-4 rounded-xl text-lg border border-white/20 transition-all duration-200"
               >
-                <Phone className="w-5 h-5" /> Call Us
-              </a>
+                View Services
+              </Link>
             </div>
           </motion.div>
         </div>

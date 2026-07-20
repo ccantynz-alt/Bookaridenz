@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /payment
+
+Sitemap: https://bookaridenz.com/sitemap.xml

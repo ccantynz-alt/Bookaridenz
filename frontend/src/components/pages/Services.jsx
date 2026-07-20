@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, Car, Ship, MapPin, Check } from 'lucide-react'
+import PageMeta from '../PageMeta'
 
 const SERVICES = [
   {
@@ -28,6 +29,7 @@ const SERVICES = [
 export default function Services() {
   return (
     <section className="py-20 bg-gradient-to-br from-gray-50 to-white min-h-[calc(100vh-88px)]">
+      <PageMeta title="Airport Transfer Services Auckland" description="Private airport shuttles, Hobbiton Movie Set tours, cruise terminal transfers and group transport across Auckland. Fixed prices, flight tracking, book online in 60 seconds." />
       <div className="container-max px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">Our Services</h1>

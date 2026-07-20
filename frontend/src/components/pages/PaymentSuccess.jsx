@@ -58,11 +58,11 @@ export default function PaymentSuccess() {
           <p className="text-gray-500 mb-3">{error || 'Booking not found.'}</p>
           <p className="text-gray-400 text-sm mb-8">
             Don't worry — if your payment was processed your booking is confirmed.
-            Call us and quote your booking reference.
+            Email us and quote your booking reference.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="tel:+6421880793" className="inline-flex items-center justify-center gap-2 bg-gold hover:bg-yellow-500 text-black font-bold px-6 py-3 rounded-xl transition-all">
-              <Phone className="w-4 h-4" /> 021 880 793
+            <a href="mailto:info@bookaride.co.nz" className="inline-flex items-center justify-center gap-2 bg-gold hover:bg-yellow-500 text-black font-bold px-6 py-3 rounded-xl transition-all">
+              <Mail className="w-4 h-4" /> info@bookaride.co.nz
             </a>
             <Link to="/" className="inline-flex items-center justify-center gap-2 border-2 border-gray-200 text-gray-700 hover:border-gray-300 font-semibold px-6 py-3 rounded-xl transition-all">
               Back to Home
@@ -95,7 +95,7 @@ export default function PaymentSuccess() {
           <p className="text-gold text-4xl font-mono font-bold tracking-wider">
             #{b.referenceNumber || b.id?.slice(-6).toUpperCase()}
           </p>
-          <p className="text-gray-500 text-sm mt-2">Save this — you'll need it if you call us</p>
+          <p className="text-gray-500 text-sm mt-2">Save this — you'll need it for any queries</p>
         </motion.div>
 
         {/* Trip details */}
@@ -141,8 +141,6 @@ export default function PaymentSuccess() {
 
         <p className="text-center text-sm text-gray-400 mt-6">
           Questions?{' '}
-          <a href="tel:+6421880793" className="text-gold hover:underline font-medium">021 880 793</a>
-          {' '}·{' '}
           <a href="mailto:info@bookaride.co.nz" className="text-gold hover:underline">info@bookaride.co.nz</a>
         </p>
       </div>
