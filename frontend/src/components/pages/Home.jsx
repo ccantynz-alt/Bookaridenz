@@ -170,7 +170,7 @@ export default function Home() {
       <section className="bg-white border-b border-gray-100">
         <div className="container-max px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 text-sm text-gray-500">
-            {['Professional Drivers', 'Premium Vehicles', 'Fixed Rates', 'Flight Tracking', 'Door-to-Door'].map((item) => (
+            {['Private Shuttle & Airport Shuttle', 'Professional Drivers', 'Premium Vehicles', 'Fixed Rates', 'Flight Tracking', 'Door-to-Door'].map((item) => (
               <div key={item} className="flex items-center gap-2">
                 <Check className="w-4 h-4 text-gold" />
                 <span className="font-medium">{item}</span>
