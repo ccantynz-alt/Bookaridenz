@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ArrowRight, Plane, MapPin, Star, Check, Shield, Clock, Award, Users, Calendar, Phone } from 'lucide-react'
+import { ArrowRight, Plane, MapPin, Star, Check, Shield, Clock, Award, Users, Calendar, Phone, Globe, Zap } from 'lucide-react'
 
 const SERVICES = [
   { icon: Plane, title: 'Airport Shuttle', description: 'Shared and private shuttle services to Auckland, Hamilton & Whangarei airports.', features: ['Door-to-door pickup', 'Flight monitoring', 'All hours covered'] },
@@ -39,6 +40,17 @@ const fadeUp = {
 }
 
 export default function Home() {
+  const navigate = useNavigate()
+  const [quote, setQuote] = useState({ pickup: '', dropoff: '' })
+
+  const goToQuote = (e) => {
+    e.preventDefault()
+    const params = new URLSearchParams()
+    if (quote.pickup) params.set('pickup', quote.pickup)
+    if (quote.dropoff) params.set('dropoff', quote.dropoff)
+    navigate(`/book-now${params.toString() ? `?${params}` : ''}`)
+  }
+
   return (
     <div className="min-h-screen bg-white">
 
@@ -55,12 +67,19 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
         </div>
 
-        <div className="container-max px-4 sm:px-6 lg:px-8 relative z-10 py-32 sm:py-40">
+        <div className="container-max px-4 sm:px-6 lg:px-8 relative z-10 py-28 sm:py-32">
+          <div className="grid lg:grid-cols-[1fr,420px] gap-12 lg:gap-16 items-center">
           <div className="max-w-3xl">
             <motion.div initial="hidden" animate="visible" variants={fadeUp}>
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 mb-8">
-                <Star className="w-4 h-4 text-gold fill-gold" />
-                <span className="text-white/90 font-medium text-sm">5-Star Rated Airport Transfers</span>
+              <div className="flex flex-wrap gap-3 mb-8">
+                <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2">
+                  <Star className="w-4 h-4 text-gold fill-gold" />
+                  <span className="text-white/90 font-medium text-sm">5-Star Rated Airport Transfers</span>
+                </div>
+                <div className="inline-flex items-center gap-2 bg-gold/20 backdrop-blur-sm border border-gold/40 rounded-full px-4 py-2">
+                  <Globe className="w-4 h-4 text-gold" />
+                  <span className="text-white/90 font-medium text-sm">International Bookings Welcome</span>
+                </div>
               </div>
             </motion.div>
 
@@ -118,7 +137,8 @@ export default function Home() {
               {[
                 { icon: Shield, label: 'Fully Insured' },
                 { icon: Clock, label: '24/7 Service' },
-                { icon: Users, label: '10,000+ Happy Clients' },
+                { icon: Check, label: 'Fixed Prices — No Surge' },
+                { icon: Plane, label: 'Flight Tracking Included' },
               ].map(({ icon: Icon, label }) => (
                 <div key={label} className="flex items-center gap-2">
                   <Icon className="w-4 h-4 text-gold" />
@@ -127,6 +147,90 @@ export default function Home() {
               ))}
             </motion.div>
           </div>
+
+          {/* Instant quote card */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35, duration: 0.5, ease: 'easeOut' }}
+            className="w-full max-w-md mx-auto lg:mx-0"
+          >
+            <form
+              onSubmit={goToQuote}
+              className="bg-black/50 backdrop-blur-md border border-white/15 rounded-2xl p-6 sm:p-8 shadow-2xl"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Zap className="w-5 h-5 text-gold" />
+                <h2 className="text-white font-bold text-xl">Get an Instant Price</h2>
+              </div>
+              <p className="text-white/60 text-sm mb-6">Live pricing — book online in 60 seconds</p>
+
+              <label className="block mb-4">
+                <span className="text-white/70 text-xs font-semibold uppercase tracking-wide">Pickup</span>
+                <div className="relative mt-1.5">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gold" />
+                  <input
+                    type="text"
+                    value={quote.pickup}
+                    onChange={(e) => setQuote((q) => ({ ...q, pickup: e.target.value }))}
+                    placeholder="Pickup address or hotel"
+                    className="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-10 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
+                  />
+                </div>
+              </label>
+
+              <label className="block mb-6">
+                <span className="text-white/70 text-xs font-semibold uppercase tracking-wide">Drop-off</span>
+                <div className="relative mt-1.5">
+                  <Plane className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gold" />
+                  <input
+                    type="text"
+                    value={quote.dropoff}
+                    onChange={(e) => setQuote((q) => ({ ...q, dropoff: e.target.value }))}
+                    placeholder="Airport, cruise terminal, anywhere"
+                    className="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-10 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
+                  />
+                </div>
+              </label>
+
+              <button
+                type="submit"
+                className="w-full inline-flex items-center justify-center gap-2 h-13 py-3.5 bg-gold hover:bg-gold-500 text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 group"
+              >
+                Get Instant Price
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+
+              <div className="flex items-center justify-center gap-4 mt-4 text-white/50 text-xs">
+                <span className="flex items-center gap-1"><Check className="w-3.5 h-3.5 text-gold" /> No account needed</span>
+                <span className="flex items-center gap-1"><Check className="w-3.5 h-3.5 text-gold" /> Secure Stripe checkout</span>
+              </div>
+            </form>
+          </motion.div>
+          </div>
+
+          {/* Stats band */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.5, ease: 'easeOut' }}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-16 sm:mt-20"
+          >
+            {[
+              { value: '10,000+', label: 'Happy Clients' },
+              { value: '60s', label: 'To Book Online' },
+              { value: '5★', label: 'Rated Service' },
+              { value: '24/7', label: 'Every Day of the Year' },
+            ].map(({ value, label }) => (
+              <div
+                key={label}
+                className="bg-black/40 backdrop-blur-md border border-white/15 rounded-2xl px-6 py-5 text-center"
+              >
+                <div className="text-gold font-bold text-2xl sm:text-3xl mb-1">{value}</div>
+                <div className="text-white/60 text-xs sm:text-sm font-medium uppercase tracking-wide">{label}</div>
+              </div>
+            ))}
+          </motion.div>
         </div>
       </section>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   MapPin, Users, ArrowRight, ArrowLeft, Loader2,
@@ -21,6 +21,7 @@ const AIRPORT_PRESETS = [
 
 export default function BookNow() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [step, setStep] = useState(0)
   const [loading, setLoading] = useState(false)
   const [priceLoading, setPriceLoading] = useState(false)
@@ -29,9 +30,9 @@ export default function BookNow() {
   const calcDebounce = useRef(null)
 
   const [form, setForm] = useState({
-    pickupAddress: '',
+    pickupAddress: searchParams.get('pickup') || '',
     pickupAddresses: [],
-    dropoffAddress: '',
+    dropoffAddress: searchParams.get('dropoff') || '',
     date: '',
     time: '',
     passengers: '1',
