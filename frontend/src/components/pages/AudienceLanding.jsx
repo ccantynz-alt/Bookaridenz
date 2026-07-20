@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import PageMeta from '../PageMeta'
 import BookingReassurance from '../BookingReassurance'
+import { COUNTRIES } from './CountryLanding'
 
 const AUDIENCES = {
   'international-visitors': {
@@ -186,6 +187,27 @@ export default function AudienceLanding({ audience }) {
           </div>
         </div>
       </section>
+
+      {/* ── FLYING FROM (international only) ────────────────── */}
+      {audience === 'international-visitors' && (
+        <section className="py-16 bg-white">
+          <div className="container-max px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">Flying From…</h2>
+            <p className="text-gray-500 mb-10 max-w-xl mx-auto">Dedicated guides for travellers from every major route into New Zealand.</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              {Object.entries(COUNTRIES).map(([slug, c]) => (
+                <Link
+                  key={slug}
+                  to={`/from/${slug}`}
+                  className="inline-flex items-center gap-2 bg-gray-50 hover:bg-gold/10 border border-gray-200 hover:border-gold text-gray-700 px-5 py-3 rounded-xl transition-all duration-200 font-medium"
+                >
+                  <span className="text-lg leading-none">{c.flag}</span> {c.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── HOW IT WORKS ────────────────────────────────────── */}
       <section className="py-24 bg-white">

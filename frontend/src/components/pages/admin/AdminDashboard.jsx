@@ -86,6 +86,12 @@ export default function AdminDashboard() {
           <span className="text-gray-600 text-sm">/ Admin</span>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate('/admin/pages')}
+            className="flex items-center gap-2 text-sm text-gold border border-gold/40 hover:bg-gold hover:text-black px-3 py-2 rounded-lg transition-colors font-medium"
+          >
+            Marketing Pages
+          </button>
           <button onClick={load} title="Refresh" className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800 transition-colors">
             <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
           </button>

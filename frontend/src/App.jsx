@@ -13,9 +13,11 @@ import NotFound from './components/pages/NotFound'
 import CruiseTransfers from './components/pages/CruiseTransfers'
 import HobbitonTransfers from './components/pages/HobbitonTransfers'
 import AudienceLanding from './components/pages/AudienceLanding'
+import CountryLanding, { COUNTRIES } from './components/pages/CountryLanding'
 import AdminLogin from './components/pages/admin/AdminLogin'
 import AdminDashboard from './components/pages/admin/AdminDashboard'
 import AdminAuthCallback from './components/pages/admin/AdminAuthCallback'
+import AdminPages from './components/pages/admin/AdminPages'
 
 function AdminGuard({ children }) {
   const token = localStorage.getItem('admin_token')
@@ -51,6 +53,11 @@ export default function App() {
         <Route path="medical-professionals" element={<AudienceLanding audience="medical-professionals" />} />
         <Route path="travel-agents" element={<AudienceLanding audience="travel-agents" />} />
 
+        {/* Country SEO landing pages */}
+        {Object.keys(COUNTRIES).map((slug) => (
+          <Route key={slug} path={`from/${slug}`} element={<CountryLanding country={slug} />} />
+        ))}
+
         {/* Redirect old/placeholder service pages to book-now */}
         <Route path="shared-shuttle" element={<Navigate to="/book-now" replace />} />
         <Route path="website-usage-policy" element={<Navigate to="/privacy-policy" replace />} />
@@ -65,6 +72,9 @@ export default function App() {
       <Route path="admin/auth/callback" element={<AdminAuthCallback />} />
       <Route path="admin/dashboard" element={
         <AdminGuard><AdminDashboard /></AdminGuard>
+      } />
+      <Route path="admin/pages" element={
+        <AdminGuard><AdminPages /></AdminGuard>
       } />
       <Route path="admin" element={<Navigate to="/admin/dashboard" replace />} />
     </Routes>
