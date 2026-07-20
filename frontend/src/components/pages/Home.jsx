@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { ArrowRight, Plane, MapPin, Star, Check, Shield, Clock, Award, Users, Calendar, Globe } from 'lucide-react'
+import GoogleReviews from '../GoogleReviews'
+import BookingReassurance from '../BookingReassurance'
 import PageMeta from '../PageMeta'
 
 const SERVICES = [
@@ -357,6 +359,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── LIVE GOOGLE REVIEWS ─────────────────────────────── */}
+      <GoogleReviews />
+
       {/* ── TESTIMONIALS ────────────────────────────────────── */}
       <section className="py-24 bg-gray-50">
         <div className="container-max px-4 sm:px-6 lg:px-8">
@@ -419,6 +424,7 @@ export default function Home() {
                 View Services
               </Link>
             </div>
+            <BookingReassurance dark className="mt-10" />
           </motion.div>
         </div>
       </section>

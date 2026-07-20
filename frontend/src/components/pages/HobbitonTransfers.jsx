@@ -3,6 +3,8 @@ import { motion } from 'framer-motion'
 import { ArrowRight, MapPin, Clock, Users, Car, Check, X, Star, Award, Wifi, Baby, Luggage, Camera, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import PageMeta from '../PageMeta'
+import BookingReassurance from '../BookingReassurance'
+import GoogleReviews from '../GoogleReviews'
 
 const COMPARISON = [
   { us: 'Leave when it suits you — timed to your tour slot', them: 'Fixed early-morning departure, one timetable for everyone' },
@@ -206,6 +208,9 @@ export default function HobbitonTransfers() {
         </div>
       </section>
 
+      {/* ── LIVE GOOGLE REVIEWS ─────────────────────────────── */}
+      <GoogleReviews />
+
       {/* ── FAQ ─────────────────────────────────────────────── */}
       <section className="py-24 bg-white">
         <div className="container-max px-4 sm:px-6 lg:px-8">
@@ -235,6 +240,7 @@ export default function HobbitonTransfers() {
             Book Your Hobbiton Transfer
             <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
           </Link>
+          <BookingReassurance dark className="mt-10" />
         </div>
       </section>
     </div>

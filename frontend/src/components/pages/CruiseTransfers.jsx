@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight, Ship, Plane, Navigation, Clock, Luggage, Award, Check, Star } from 'lucide-react'
 import PageMeta from '../PageMeta'
+import BookingReassurance from '../BookingReassurance'
 
 const PICKUP_LOCATIONS = [
   {
@@ -219,6 +220,7 @@ export default function CruiseTransfers() {
             Book Your Cruise Transfer
             <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
           </Link>
+          <BookingReassurance className="mt-10" />
         </div>
       </section>
     </div>

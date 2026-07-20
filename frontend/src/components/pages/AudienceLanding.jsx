@@ -5,6 +5,7 @@ import {
   GraduationCap, Briefcase, Stethoscope, Handshake, Mail, Calendar, CreditCard, MapPin,
 } from 'lucide-react'
 import PageMeta from '../PageMeta'
+import BookingReassurance from '../BookingReassurance'
 
 const AUDIENCES = {
   'international-visitors': {
@@ -221,6 +222,7 @@ export default function AudienceLanding({ audience }) {
             Book Your Ride
             <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
           </Link>
+          <BookingReassurance dark className="mt-10" />
         </div>
       </section>
     </div>

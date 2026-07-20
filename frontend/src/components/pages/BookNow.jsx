@@ -1,462 +1,922 @@
-import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import {
-  MapPin, Users, ArrowRight, ArrowLeft, Loader2,
-  CheckCircle, Plus, X, Luggage, Star, RotateCcw,
-} from 'lucide-react'
-import { cn } from '../../lib/cn'
+import React, { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
+import { MapPin, Calendar, Users, DollarSign, Clock, Mail, Phone, User, Plane, CheckCircle } from 'lucide-react'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
+import { Textarea } from '../ui/textarea'
+import { Card, CardContent } from '../ui/card'
+import { toast, Toaster } from 'sonner'
 import api from '../../lib/api'
-import AddressInput from '../booking/AddressInput'
-import DateTimePicker from '../booking/DateTimePicker'
-import PriceBreakdown from '../booking/PriceBreakdown'
 import PageMeta from '../PageMeta'
+import LoadingSpinner from '../LoadingSpinner'
+import { CustomDatePicker, CustomTimePicker } from '../DateTimePicker'
+import PriceComparison from '../PriceComparison'
+import TrustBadges from '../TrustBadges'
+import GoogleAddressInput from '../GoogleAddressInput'
 
-const STEPS = ['Trip Details', 'Your Details', 'Confirm & Pay']
-
-const AIRPORT_PRESETS = [
-  { label: 'Auckland Airport', address: 'Auckland Airport, Ray Emery Drive, Mangere, Auckland, New Zealand' },
-  { label: 'Hamilton Airport', address: 'Hamilton Airport, Airport Road, Hamilton, New Zealand' },
-  { label: 'Whangarei Airport', address: 'Whangarei Airport, Handforth Street, Whangarei, New Zealand' },
+const DROPOFF_QUICK_ADDRESSES = [
+  { label: 'Auckland Airport', address: 'Auckland Airport, Ray Emery Drive, Mangere, Auckland 2022, New Zealand' },
+  { label: 'Auckland Domestic', address: 'Auckland Airport, Ray Emery Drive, Mangere, Auckland 2022, New Zealand' },
 ]
 
-export default function BookNow() {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const [step, setStep] = useState(0)
-  const [loading, setLoading] = useState(false)
-  const [priceLoading, setPriceLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [pricing, setPricing] = useState(null)
-  const calcDebounce = useRef(null)
+const SELECT_CLASS =
+  'flex h-10 w-full appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold'
 
-  const [form, setForm] = useState({
+export const BookNow = () => {
+  const { i18n } = useTranslation()
+  const [searchParams] = useSearchParams()
+
+  const [formData, setFormData] = useState({
+    serviceType: '',
     pickupAddress: searchParams.get('pickup') || '',
-    pickupAddresses: [],
     dropoffAddress: searchParams.get('dropoff') || '',
     date: '',
     time: '',
     passengers: '1',
     vipAirportPickup: false,
     oversizedLuggage: false,
-    bookReturn: false,
+    goldCard: false,
+    // Single flight number and time for outbound
+    flightNumber: '',
+    flightTime: '',
+    // Return trip - simplified to just date, time, and one flight number
     returnDate: '',
     returnTime: '',
     returnFlightNumber: '',
-    departureFlightNumber: '',
-    arrivalFlightNumber: '',
     name: '',
     email: '',
     phone: '',
     notes: '',
+    paymentMethod: 'card',
+    notificationPreference: 'both',
   })
 
-  // Load returning customer details
+  // Returning customer
+  const [isReturningCustomer, setIsReturningCustomer] = useState(false)
+
   useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('bookaride_customer') || 'null')
-      if (saved?.name) {
-        setForm((prev) => ({ ...prev, name: saved.name, email: saved.email || '', phone: saved.phone || '' }))
+    const savedCustomer = localStorage.getItem('bookaride_customer')
+    if (savedCustomer) {
+      try {
+        const customer = JSON.parse(savedCustomer)
+        setFormData(prev => ({
+          ...prev,
+          name: customer.name || '',
+          email: customer.email || '',
+          phone: customer.phone || '',
+        }))
+        setIsReturningCustomer(true)
+      } catch (e) {
+        console.error('Error loading saved customer:', e)
       }
-    } catch {}
+    }
   }, [])
 
-  function update(field, value) {
-    setForm((prev) => {
-      const next = { ...prev, [field]: value }
-      return next
-    })
-    if (['pickupAddress', 'dropoffAddress', 'passengers', 'vipAirportPickup', 'oversizedLuggage', 'bookReturn', 'returnDate', 'returnTime'].includes(field)) {
-      setPricing(null)
+  const saveCustomerDetails = () => {
+    if (formData.name && formData.email) {
+      localStorage.setItem('bookaride_customer', JSON.stringify({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        lastBooking: new Date().toISOString(),
+      }))
     }
   }
 
-  function addPickup() {
-    if (form.pickupAddresses.length < 3) update('pickupAddresses', [...form.pickupAddresses, ''])
-  }
-  function updatePickup(i, value) {
-    const updated = [...form.pickupAddresses]
-    updated[i] = value
-    update('pickupAddresses', updated)
-    setPricing(null)
-  }
-  function removePickup(i) {
-    update('pickupAddresses', form.pickupAddresses.filter((_, idx) => idx !== i))
-    setPricing(null)
+  const clearSavedCustomer = () => {
+    localStorage.removeItem('bookaride_customer')
+    setFormData(prev => ({ ...prev, name: '', email: '', phone: '' }))
+    setIsReturningCustomer(false)
   }
 
-  // Auto-calculate when both addresses are filled
+  // Date/Time picker states
+  const [pickupDate, setPickupDate] = useState(null)
+  const [pickupTime, setPickupTime] = useState(null)
+  const [flightTimePicker, setFlightTimePicker] = useState(null)
+  const [returnDatePicker, setReturnDatePicker] = useState(null)
+  const [returnTimePicker, setReturnTimePicker] = useState(null)
+
+  const [pricing, setPricing] = useState({
+    distance: 0,
+    basePrice: 0,
+    airportFee: 0,
+    oversizedLuggageFee: 0,
+    passengerFee: 0,
+    fuelSurcharge: 0,
+    fuelSurchargePercent: 0,
+    stripeFee: 0,
+    subtotal: 0,
+    totalPrice: 0,
+    calculating: false,
+    promoCode: null,
+    promoDiscount: 0,
+  })
+
+  // Promo code state
+  const [promoCode, setPromoCode] = useState('')
+  const [promoApplied, setPromoApplied] = useState(null)
+  const [promoError, setPromoError] = useState('')
+  const [applyingPromo, setApplyingPromo] = useState(false)
+
   useEffect(() => {
-    if (!form.pickupAddress || !form.dropoffAddress) return
-    if (calcDebounce.current) clearTimeout(calcDebounce.current)
-    calcDebounce.current = setTimeout(() => {
-      calculatePrice(form)
-    }, 600)
-    return () => clearTimeout(calcDebounce.current)
-  }, [form.pickupAddress, form.dropoffAddress, form.pickupAddresses, form.passengers, form.vipAirportPickup, form.oversizedLuggage, form.bookReturn, form.returnDate, form.returnTime])
+    const savedPromo = localStorage.getItem('promoCode')
+    if (savedPromo) {
+      setPromoCode(savedPromo)
+      localStorage.removeItem('promoCode')
+    }
+  }, [])
 
-  async function calculatePrice(f = form) {
-    if (!f.pickupAddress || !f.dropoffAddress) return
-    setError('')
-    setPriceLoading(true)
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+
+  const finalTotal = pricing.totalPrice
+
+  const serviceOptions = [
+    { value: 'airport-transfer', label: 'Airport Transfer' },
+    { value: 'private-transfer', label: 'Private Transfer' },
+  ]
+
+  // Calculate price when key fields change
+  const priceCalcRef = useRef(0) // Guard against stale API responses
+  const priceCalcTimerRef = useRef(null)
+  useEffect(() => {
+    if (formData.pickupAddress && formData.dropoffAddress && formData.serviceType) {
+      // Debounce price calculation to avoid hammering API when multiple fields change at once
+      if (priceCalcTimerRef.current) clearTimeout(priceCalcTimerRef.current)
+      priceCalcTimerRef.current = setTimeout(() => {
+        calculatePrice()
+      }, 400)
+    }
+    return () => clearTimeout(priceCalcTimerRef.current)
+  }, [formData.pickupAddress, formData.dropoffAddress, formData.passengers, formData.serviceType, formData.returnDate, formData.returnTime, formData.vipAirportPickup, formData.oversizedLuggage, formData.goldCard])
+
+  const calculatePrice = async () => {
+    const requestId = ++priceCalcRef.current
+    setPricing(prev => ({ ...prev, calculating: true }))
+
     try {
-      const { data } = await api.post('/calculate-price', {
-        serviceType: 'airport-transfer',
-        pickupAddress: f.pickupAddress,
-        pickupAddresses: f.pickupAddresses.filter(Boolean),
-        dropoffAddress: f.dropoffAddress,
-        passengers: parseInt(f.passengers) || 1,
-        vipAirportPickup: f.vipAirportPickup,
-        oversizedLuggage: f.oversizedLuggage,
-        bookReturn: !!(f.bookReturn && f.returnDate && f.returnTime),
+      const hasReturnTrip = !!(formData.returnDate && formData.returnTime)
+      const response = await api.post('/calculate-price', {
+        serviceType: formData.serviceType,
+        pickupAddress: formData.pickupAddress,
+        dropoffAddress: formData.dropoffAddress,
+        passengers: parseInt(formData.passengers) || 1,
+        vipAirportPickup: formData.vipAirportPickup,
+        oversizedLuggage: formData.oversizedLuggage,
+        goldCard: formData.goldCard,
+        bookReturn: hasReturnTrip,
+      }, { timeout: 12000 })
+
+      // Discard stale response if a newer request was fired
+      if (requestId !== priceCalcRef.current) return
+
+      const data = response.data
+      setPricing({
+        distance: data.distance,
+        basePrice: data.basePrice,
+        airportFee: data.airportFee,
+        oversizedLuggageFee: data.oversizedLuggageFee,
+        passengerFee: data.passengerFee,
+        fuelSurcharge: data.fuelSurcharge || 0,
+        fuelSurchargePercent: data.fuelSurchargePercent || 0,
+        stripeFee: data.stripeFee ?? Math.round(((data.subtotal * 0.029) + 0.30) * 100) / 100,
+        subtotal: data.subtotal,
+        totalPrice: data.totalPrice,
+        calculating: false,
       })
-      setPricing(data)
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Unable to calculate price — please check addresses')
-    } finally {
-      setPriceLoading(false)
+    } catch (error) {
+      if (requestId !== priceCalcRef.current) return
+      console.error('Error calculating price:', error)
+      setPricing(prev => ({ ...prev, calculating: false }))
+      toast.error('Unable to calculate distance. Please check addresses.')
     }
   }
 
-  function canProceedStep0() {
-    return form.pickupAddress && form.dropoffAddress && form.date && form.time && pricing
-  }
-  function canProceedStep1() {
-    return form.name && form.email && form.phone
-  }
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) { setPromoError('Please enter a promo code'); return }
+    if (pricing.subtotal <= 0) { setPromoError('Get a quote first, then your code will be applied automatically'); return }
 
-  async function submitBooking() {
-    setError('')
-    setLoading(true)
+    setApplyingPromo(true)
+    setPromoError('')
     try {
-      // Save customer for next visit
-      localStorage.setItem('bookaride_customer', JSON.stringify({ name: form.name, email: form.email, phone: form.phone }))
-
-      const { data: booking } = await api.post('/bookings', {
-        ...form,
-        serviceType: 'airport-transfer',
-        passengers: form.passengers,
-        pricing: {
-          distance: pricing.distance,
-          basePrice: pricing.basePrice,
-          airportFee: pricing.airportFee,
-          oversizedLuggageFee: pricing.oversizedLuggageFee,
-          passengerFee: pricing.passengerFee,
-          stripeFee: pricing.stripeFee,
-          subtotal: pricing.subtotal,
-          totalPrice: pricing.totalPrice,
-          ratePerKm: pricing.ratePerKm,
-        },
-        returnDepartureFlightNumber: form.returnFlightNumber,
-      })
-
-      const { data: checkout } = await api.post('/payment/create-checkout', { booking_id: booking.id, origin_url: window.location.origin })
-      if (checkout.url) { window.location.href = checkout.url; return }
-      navigate(`/payment/success?booking_id=${booking.id}`)
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to create booking — please try again')
+      const response = await api.post('/validate-promo', { code: promoCode.trim(), subtotal: pricing.subtotal })
+      setPromoApplied(response.data)
+      toast.success(`Promo code applied! You saved $${response.data.discountAmount.toFixed(2)}`)
+    } catch (error) {
+      setPromoError(error.response?.data?.detail || 'Invalid promo code')
+      setPromoApplied(null)
     } finally {
-      setLoading(false)
+      setApplyingPromo(false)
+    }
+  }
+
+  const handleRemovePromo = () => {
+    setPromoApplied(null)
+    setPromoCode('')
+    setPromoError('')
+  }
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSelectChange = (name, value) => {
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    // Prevent double-submit while processing
+    if (isProcessingPayment) return
+
+    if (!formData.serviceType) { toast.error('Please select a service type'); return }
+    if (!formData.pickupAddress || !formData.dropoffAddress) { toast.error('Please enter both pickup and drop-off addresses'); return }
+    if (!formData.date || !formData.time) { toast.error('Please select pickup date and time'); return }
+    if (!formData.name || !formData.email || !formData.phone) { toast.error('Please fill in all contact information'); return }
+
+    // Validate return trip fields
+    const hasReturnTrip = !!(formData.returnDate && formData.returnTime)
+    const isAirportTransfer = formData.serviceType?.toLowerCase().includes('airport')
+
+    // Catch case where customer enters return flight number but forgets date/time
+    if (formData.returnFlightNumber && formData.returnFlightNumber.trim() && !hasReturnTrip) {
+      toast.error('You entered a return flight number but no return date and time. Please add return date and time, or clear the flight number for a one-way trip.')
+      return
+    }
+
+    if (isAirportTransfer && hasReturnTrip) {
+      if (!formData.returnFlightNumber || !formData.returnFlightNumber.trim()) {
+        toast.error('Flight number is mandatory for return trips. Bookings without flight numbers may face cancellation.')
+        return
+      }
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) { toast.error('Please enter a valid email address'); return }
+    if (pricing.totalPrice === 0) { toast.error('Please wait for price calculation to complete'); return }
+
+    setIsProcessingPayment(true)
+
+    try {
+      // Map simplified fields to backend-expected fields for compatibility
+      const bookingData = {
+        ...formData,
+        bookReturn: hasReturnTrip,
+        // Map simplified flight fields to backend-expected fields
+        departureFlightNumber: formData.flightNumber,
+        arrivalFlightNumber: formData.flightNumber,
+        flightArrivalNumber: formData.flightNumber,
+        flightArrivalTime: formData.flightTime,
+        flightDepartureNumber: formData.flightNumber,
+        flightDepartureTime: formData.flightTime,
+        // Map returnFlightNumber to the field the backend expects
+        returnDepartureFlightNumber: formData.returnFlightNumber,
+        returnFlightNumber: formData.returnFlightNumber,
+        pricing: pricing,
+        status: 'pending',
+        language: i18n.language,
+        createdAt: new Date(),
+      }
+
+      const bookingResponse = await api.post('/bookings', bookingData, { timeout: 15000 })
+      const booking = bookingResponse.data
+
+      saveCustomerDetails()
+
+      try {
+        const checkoutResponse = await api.post('/payment/create-checkout', {
+          booking_id: booking.id,
+          origin_url: window.location.origin,
+        }, { timeout: 15000 })
+        if (checkoutResponse.data?.url) {
+          window.location.href = checkoutResponse.data.url
+        } else {
+          setIsProcessingPayment(false)
+          toast.success(`Booking #${booking.referenceNumber || booking.id?.slice(0, 8)} created! We'll email you a payment link shortly.`)
+        }
+      } catch (paymentError) {
+        setIsProcessingPayment(false)
+        const ref = booking?.referenceNumber || booking?.id?.slice(0, 8)
+        toast.success(`Booking #${ref} created! Payment redirect failed - we'll contact you with payment details.`)
+      }
+    } catch (error) {
+      console.error('Error submitting booking:', error)
+      setIsProcessingPayment(false)
+      const status = error.response?.status
+      const data = error.response?.data || {}
+      const detail = data.detail ?? data.message ?? data.error
+      let msg = 'Failed to submit booking. Please try again.'
+      if (!error.response) {
+        msg = 'Cannot reach server. Check your connection or try again later.'
+      } else if (Array.isArray(detail)) {
+        const parts = detail.map((e) => {
+          const field = Array.isArray(e.loc) ? e.loc[e.loc.length - 1] : null
+          return field && e.msg ? `${field}: ${e.msg}` : (e.msg || e.loc?.join('.'))
+        }).filter(Boolean)
+        msg = parts.length ? parts.slice(0, 3).join('. ') : msg
+      } else if (typeof detail === 'string' && detail.trim()) {
+        msg = detail
+      } else if (status === 404) {
+        msg = 'Booking service unavailable. Please contact us.'
+      } else if (status) {
+        msg = `Booking failed (${status}). ${typeof detail === 'string' ? detail : 'Please try again.'}`
+      }
+      toast.error(msg)
     }
   }
 
   return (
-    <div className="min-h-[calc(100vh-88px)] bg-gradient-to-br from-gray-50 to-white py-12">
-      <PageMeta title="Book Your Transfer — Instant Price" description="Get a live price for your Auckland airport transfer and book in 60 seconds. Fixed rates, secure Stripe checkout, instant email and SMS confirmation." />
-      <div className="container-max px-4 sm:px-6 lg:px-8 max-w-3xl">
-
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Book Your Transfer</h1>
-          <p className="text-gray-500">Get an instant price — no obligation, no hidden fees.</p>
+    <div className="min-h-screen bg-white">
+      <Toaster position="top-center" richColors />
+      {isProcessingPayment && <LoadingSpinner message="Processing your booking..." />}
+      <PageMeta
+        title="Book Your Airport Shuttle Now - Instant Quote & Online Booking"
+        description="Book your airport shuttle online with instant live pricing. Auckland, Hamilton, Whangarei airport transfers. Easy online booking, secure payment, live price calculator. Book your shuttle service now!"
+      />
+      {/* Hero Section */}
+      <section className="pt-32 pb-16 bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1920&q=80&fm=webp"
+            alt="Road trip scenic drive"
+            className="w-full h-full object-cover"
+            fetchPriority="high"
+            loading="eager"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-gray-900/70 via-gray-900/60 to-gray-900" />
         </div>
-
-        {/* Step indicator */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          {STEPS.map((s, i) => (
-            <div key={s} className="flex items-center gap-2">
-              <div className={cn(
-                'w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all',
-                i < step ? 'bg-gold text-black' : i === step ? 'bg-gray-900 text-gold border-2 border-gold' : 'bg-gray-200 text-gray-500'
-              )}>
-                {i < step ? <CheckCircle className="w-5 h-5" /> : i + 1}
-              </div>
-              <span className={cn('text-sm font-medium hidden sm:block', i <= step ? 'text-gray-900' : 'text-gray-400')}>{s}</span>
-              {i < STEPS.length - 1 && <div className={cn('w-8 h-0.5 mx-1', i < step ? 'bg-gold' : 'bg-gray-200')} />}
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="inline-block mb-4">
+              <span className="bg-gold/20 text-gold text-sm font-semibold px-4 py-2 rounded-full border border-gold/30">
+                INSTANT ONLINE BOOKING
+              </span>
             </div>
-          ))}
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">
+              Book Your <span className="text-gold">Ride</span>
+            </h1>
+            <p className="text-xl text-white/80">
+              Get instant pricing with our live calculator - No hidden fees
+            </p>
+          </div>
         </div>
+      </section>
 
-        {/* Error */}
-        <AnimatePresence>
-          {error && (
-            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl flex items-center gap-2">
-              <X className="w-4 h-4 shrink-0" />{error}
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* Trust Bar — Conversion boosters */}
+      <section className="bg-white border-b border-gray-100">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10 text-sm text-gray-600">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <span className="font-medium">Fixed Price Guarantee</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <span className="font-medium">Free Cancellation (24hr)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <span className="font-medium">Flight Monitoring Included</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-500" />
+              <span className="font-medium">24/7 Service</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        {/* Form card */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-          <AnimatePresence mode="wait">
+      {/* Booking Form */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Main Form */}
+                <div className="lg:col-span-2 space-y-6">
+                  <Card className="border-2 border-gray-200 shadow-lg">
+                    <CardContent className="p-8">
+                      <h2 className="text-2xl font-bold text-gray-900 mb-6">Trip Details</h2>
 
-            {/* ── Step 0: Trip Details ── */}
-            {step === 0 && (
-              <motion.div key="step0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-6 sm:p-8 space-y-5">
-
-                {/* Pickup */}
-                <AddressInput
-                  label="Pickup Address"
-                  value={form.pickupAddress}
-                  onChange={(v) => update('pickupAddress', v)}
-                  placeholder="e.g. 123 Queen Street, Auckland"
-                />
-
-                {/* Additional pickups */}
-                {form.pickupAddresses.map((addr, i) => (
-                  <div key={i} className="flex gap-2">
-                    <div className="flex-1">
-                      <AddressInput
-                        label={`Additional Pickup ${i + 1}`}
-                        value={addr}
-                        onChange={(v) => updatePickup(i, v)}
-                        placeholder="Additional pickup address"
-                      />
-                    </div>
-                    <button onClick={() => removePickup(i)} className="self-end p-3 text-gray-400 hover:text-red-500 transition-colors">
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                ))}
-                {form.pickupAddresses.length < 3 && (
-                  <button onClick={addPickup} className="text-sm text-gold font-medium flex items-center gap-1 hover:underline">
-                    <Plus className="w-4 h-4" /> Add another pickup
-                  </button>
-                )}
-
-                {/* Drop-off with quick-select */}
-                <div>
-                  <AddressInput
-                    label="Drop-off Address"
-                    value={form.dropoffAddress}
-                    onChange={(v) => update('dropoffAddress', v)}
-                    placeholder="e.g. Auckland Airport"
-                    icon={MapPin}
-                  />
-                  {/* Quick-select airports */}
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {AIRPORT_PRESETS.map((p) => (
-                      <button
-                        key={p.label}
-                        onClick={() => update('dropoffAddress', p.address)}
-                        className={cn(
-                          'text-xs px-3 py-1.5 rounded-full border font-medium transition-all',
-                          form.dropoffAddress === p.address
-                            ? 'bg-gold text-black border-gold'
-                            : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-gold hover:text-gold'
-                        )}
-                      >
-                        {p.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Date & Time */}
-                <DateTimePicker
-                  date={form.date}
-                  time={form.time}
-                  onDateChange={(v) => update('date', v)}
-                  onTimeChange={(v) => update('time', v)}
-                />
-
-                {/* Passengers */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Passengers</label>
-                  <div className="relative">
-                    <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <select value={form.passengers} onChange={(e) => update('passengers', e.target.value)}
-                      className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gold/40 focus:border-gold bg-white appearance-none">
-                      {[1,2,3,4,5,6,7,8,9,10,11].map((n) => (
-                        <option key={n} value={n}>{n} passenger{n > 1 ? 's' : ''}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Flight numbers */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Departure Flight</label>
-                    <input type="text" value={form.departureFlightNumber} onChange={(e) => update('departureFlightNumber', e.target.value.toUpperCase())}
-                      placeholder="e.g. NZ1" className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gold/40 focus:border-gold" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Arrival Flight</label>
-                    <input type="text" value={form.arrivalFlightNumber} onChange={(e) => update('arrivalFlightNumber', e.target.value.toUpperCase())}
-                      placeholder="e.g. QF145" className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gold/40 focus:border-gold" />
-                  </div>
-                </div>
-
-                {/* Options */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Options</label>
-                  <div className="grid sm:grid-cols-3 gap-3">
-                    {[
-                      { key: 'vipAirportPickup', label: 'VIP Pickup', sub: '+$15', icon: Star },
-                      { key: 'oversizedLuggage', label: 'Large Luggage', sub: '+$25', icon: Luggage },
-                      { key: 'bookReturn', label: 'Return Trip', sub: 'Add return', icon: RotateCcw },
-                    ].map(({ key, label, sub, icon: Icon }) => (
-                      <button key={key} onClick={() => update(key, !form[key])}
-                        className={cn('flex items-center gap-2 p-3 rounded-lg border text-sm transition-all',
-                          form[key] ? 'border-gold bg-gold/5 text-gold' : 'border-gray-200 text-gray-600 hover:border-gray-300')}>
-                        <Icon className="w-4 h-4" />
-                        <span className="font-medium">{label}</span>
-                        <span className="text-xs text-gray-400 ml-auto">{sub}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Return details */}
-                <AnimatePresence>
-                  {form.bookReturn && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-4 overflow-hidden">
-                      <DateTimePicker dateLabel="Return Date" timeLabel="Return Time" date={form.returnDate} time={form.returnTime}
-                        onDateChange={(v) => update('returnDate', v)} onTimeChange={(v) => update('returnTime', v)} minDate={form.date} />
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Return Flight Number <span className="text-red-500">*</span></label>
-                        <input type="text" value={form.returnFlightNumber} onChange={(e) => update('returnFlightNumber', e.target.value.toUpperCase())}
-                          placeholder="e.g. NZ123" className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gold/40 focus:border-gold" />
+                      {/* Service Type */}
+                      <div className="space-y-2 mb-6">
+                        <Label htmlFor="serviceType" className="flex items-center space-x-2">
+                          <MapPin className="w-4 h-4 text-gold" />
+                          <span>Service Type *</span>
+                        </Label>
+                        <select
+                          id="serviceType"
+                          value={formData.serviceType}
+                          onChange={(e) => handleSelectChange('serviceType', e.target.value)}
+                          required
+                          className={SELECT_CLASS}
+                        >
+                          <option value="" disabled>Select service</option>
+                          {serviceOptions.map(option => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                          ))}
+                        </select>
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
 
-                {/* Price area */}
-                {priceLoading && (
-                  <div className="flex items-center gap-2 text-sm text-gray-500 py-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-gold" /> Calculating price...
-                  </div>
-                )}
-                {pricing && <PriceBreakdown pricing={pricing} bookReturn={form.bookReturn && !!(form.returnDate && form.returnTime)} />}
+                      {/* Pickup Address */}
+                      <div className="space-y-2 mb-6">
+                        <Label htmlFor="pickupAddress" className="flex items-center space-x-2">
+                          <MapPin className="w-4 h-4 text-gold" />
+                          <span>Pickup Location *</span>
+                        </Label>
+                        <GoogleAddressInput
+                          id="pickupAddress"
+                          value={formData.pickupAddress}
+                          onChange={(val) => setFormData(prev => ({ ...prev, pickupAddress: val }))}
+                          onSelect={(val) => setFormData(prev => ({ ...prev, pickupAddress: val }))}
+                          placeholder="Start typing your address..."
+                          required
+                        />
+                      </div>
 
-                <button
-                  onClick={() => canProceedStep0() ? (setError(''), setStep(1)) : setError('Please fill in pickup, drop-off, date and time to continue')}
-                  disabled={!form.pickupAddress || !form.dropoffAddress}
-                  className="w-full h-14 bg-gold hover:bg-yellow-500 disabled:bg-gray-200 disabled:text-gray-400 text-black font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-md hover:shadow-gold/30 hover:scale-[1.02] disabled:scale-100 disabled:shadow-none"
-                >
-                  {pricing ? (<>Continue <ArrowRight className="w-5 h-5" /></>) : (<>Enter addresses above to see your price</>)}
-                </button>
-              </motion.div>
-            )}
+                      {/* Drop-off Address */}
+                      <div className="space-y-2 mb-6">
+                        <Label htmlFor="dropoffAddress" className="flex items-center space-x-2">
+                          <MapPin className="w-4 h-4 text-gold" />
+                          <span>Drop-off Location *</span>
+                        </Label>
+                        {/* Quick address buttons */}
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {DROPOFF_QUICK_ADDRESSES.map((qa, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, dropoffAddress: qa.address }))}
+                              className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                                formData.dropoffAddress === qa.address
+                                  ? 'bg-gold text-black border-gold'
+                                  : 'bg-white text-gray-600 border-gray-300 hover:border-gold hover:text-gold'
+                              }`}
+                            >
+                              {qa.label}
+                            </button>
+                          ))}
+                        </div>
+                        <GoogleAddressInput
+                          id="dropoffAddress"
+                          value={formData.dropoffAddress}
+                          onChange={(val) => setFormData(prev => ({ ...prev, dropoffAddress: val }))}
+                          onSelect={(val) => setFormData(prev => ({ ...prev, dropoffAddress: val }))}
+                          placeholder="Start typing destination..."
+                          required
+                        />
+                      </div>
 
-            {/* ── Step 1: Your Details ── */}
-            {step === 1 && (
-              <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-6 sm:p-8 space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
-                  <input type="text" value={form.name} onChange={(e) => update('name', e.target.value)} placeholder="John Smith"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gold/40 focus:border-gold" />
+                      {/* Date & Time */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div className="space-y-2">
+                          <Label className="flex items-center space-x-2">
+                            <Calendar className="w-4 h-4 text-gold" />
+                            <span>Pickup Date *</span>
+                          </Label>
+                          <CustomDatePicker
+                            selected={pickupDate}
+                            onChange={(date) => {
+                              setPickupDate(date)
+                              if (date) {
+                                const year = date.getFullYear()
+                                const month = String(date.getMonth() + 1).padStart(2, '0')
+                                const day = String(date.getDate()).padStart(2, '0')
+                                setFormData(prev => ({ ...prev, date: `${year}-${month}-${day}` }))
+                              }
+                            }}
+                            placeholder="Select pickup date"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="flex items-center space-x-2">
+                            <Clock className="w-4 h-4 text-gold" />
+                            <span>Pickup Time *</span>
+                          </Label>
+                          <CustomTimePicker
+                            selected={pickupTime}
+                            onChange={(time) => {
+                              setPickupTime(time)
+                              if (time) {
+                                const hours = time.getHours().toString().padStart(2, '0')
+                                const minutes = time.getMinutes().toString().padStart(2, '0')
+                                setFormData(prev => ({ ...prev, time: `${hours}:${minutes}` }))
+                              }
+                            }}
+                            placeholder="Select pickup time"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      {/* Passengers */}
+                      <div className="space-y-2 mb-6">
+                        <Label htmlFor="passengers" className="flex items-center space-x-2">
+                          <Users className="w-4 h-4 text-gold" />
+                          <span>Number of Passengers *</span>
+                        </Label>
+                        <select
+                          id="passengers"
+                          value={formData.passengers}
+                          onChange={(e) => handleSelectChange('passengers', e.target.value)}
+                          required
+                          className={SELECT_CLASS}
+                        >
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(num => (
+                            <option key={num} value={num.toString()}>{num} {num === 1 ? 'Passenger' : 'Passengers'}</option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">1st passenger included, $5 per additional passenger</p>
+                      </div>
+
+                      {/* VIP Parking Service */}
+                      <div className="mb-6 bg-gold/5 p-4 rounded-lg border border-gold/20">
+                        <div className="flex items-start space-x-3">
+                          <input
+                            type="checkbox"
+                            id="vipAirportPickup"
+                            checked={formData.vipAirportPickup}
+                            onChange={(e) => setFormData(prev => ({ ...prev, vipAirportPickup: e.target.checked }))}
+                            className="w-4 h-4 text-gold border-gray-300 rounded focus:ring-gold mt-1"
+                          />
+                          <div className="flex-1">
+                            <Label htmlFor="vipAirportPickup" className="cursor-pointer font-semibold text-gray-900">
+                              VIP Parking Service - $15
+                            </Label>
+                            <p className="text-xs text-gray-600 mt-1">Driver meets you outside door eleven</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Oversized Luggage Service */}
+                      <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div className="flex items-start space-x-3">
+                          <input
+                            type="checkbox"
+                            id="oversizedLuggage"
+                            checked={formData.oversizedLuggage}
+                            onChange={(e) => setFormData(prev => ({ ...prev, oversizedLuggage: e.target.checked }))}
+                            className="w-4 h-4 text-gold border-gray-300 rounded focus:ring-gold mt-1"
+                          />
+                          <div className="flex-1">
+                            <Label htmlFor="oversizedLuggage" className="cursor-pointer font-semibold text-gray-900">
+                              Oversized Luggage Service - $25
+                            </Label>
+                            <p className="text-xs text-gray-600 mt-1">For skis, snowboards, surfboards, golf clubs, bikes, or extra-large suitcases</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Gold Card Discount */}
+                      <div className="mb-6 bg-gold/10 p-4 rounded-lg border border-gold/30">
+                        <div className="flex items-start space-x-3">
+                          <input
+                            type="checkbox"
+                            id="goldCard"
+                            checked={formData.goldCard}
+                            onChange={(e) => setFormData(prev => ({ ...prev, goldCard: e.target.checked }))}
+                            className="w-4 h-4 text-gold border-gray-300 rounded focus:ring-gold mt-1"
+                          />
+                          <div className="flex-1">
+                            <Label htmlFor="goldCard" className="cursor-pointer font-semibold text-gray-900">
+                              Gold Card holder — 10% discount
+                            </Label>
+                            <p className="text-xs text-gray-600 mt-1">SuperGold Card or other eligible Gold Card</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Flight Details & Return Journey */}
+                      <div className="bg-gray-50 p-6 rounded-lg mb-6 border border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">Flight Details</h3>
+                        <p className="text-xs text-amber-700 bg-amber-50 p-2 rounded mb-4">
+                          <strong>Important:</strong> Flight numbers are required for airport pickups so our driver can meet you on time.
+                        </p>
+
+                        {/* Flight Number and Flight Time */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                          <div className="space-y-2">
+                            <Label htmlFor="flightNumber" className="flex items-center space-x-2">
+                              <Plane className="w-4 h-4 text-gold" />
+                              <span>Flight Number</span>
+                            </Label>
+                            <Input
+                              id="flightNumber"
+                              name="flightNumber"
+                              value={formData.flightNumber}
+                              onChange={handleChange}
+                              placeholder="e.g., NZ123"
+                              className="transition-all duration-200 focus:ring-2 focus:ring-gold"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="flex items-center space-x-2">
+                              <Clock className="w-4 h-4 text-gold" />
+                              <span>Flight Time</span>
+                            </Label>
+                            <CustomTimePicker
+                              selected={flightTimePicker}
+                              onChange={(time) => {
+                                setFlightTimePicker(time)
+                                if (time) {
+                                  const hours = time.getHours().toString().padStart(2, '0')
+                                  const minutes = time.getMinutes().toString().padStart(2, '0')
+                                  setFormData(prev => ({ ...prev, flightTime: `${hours}:${minutes}` }))
+                                }
+                              }}
+                              placeholder="Select flight time"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Return Journey */}
+                        <div className="border-t border-gray-200 pt-4">
+                          <h4 className="text-md font-semibold text-gray-800 mb-1">Return Journey <span className="text-sm font-normal text-gray-500">(Optional - leave blank for one-way)</span></h4>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 mt-3">
+                            <div className="space-y-2">
+                              <Label className="flex items-center space-x-2">
+                                <Calendar className="w-4 h-4 text-gold" />
+                                <span>Return Date</span>
+                              </Label>
+                              <CustomDatePicker
+                                selected={returnDatePicker}
+                                onChange={(date) => {
+                                  setReturnDatePicker(date)
+                                  if (date) {
+                                    const year = date.getFullYear()
+                                    const month = String(date.getMonth() + 1).padStart(2, '0')
+                                    const day = String(date.getDate()).padStart(2, '0')
+                                    setFormData(prev => ({ ...prev, returnDate: `${year}-${month}-${day}` }))
+                                  }
+                                }}
+                                placeholder="Select return date"
+                                minDate={pickupDate || new Date()}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="flex items-center space-x-2">
+                                <Clock className="w-4 h-4 text-gold" />
+                                <span>Return Time</span>
+                              </Label>
+                              <CustomTimePicker
+                                selected={returnTimePicker}
+                                onChange={(time) => {
+                                  setReturnTimePicker(time)
+                                  if (time) {
+                                    const hours = time.getHours().toString().padStart(2, '0')
+                                    const minutes = time.getMinutes().toString().padStart(2, '0')
+                                    setFormData(prev => ({ ...prev, returnTime: `${hours}:${minutes}` }))
+                                  }
+                                }}
+                                placeholder="Select return time"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Return flight number */}
+                          <div className="space-y-2">
+                            <Label htmlFor="returnFlightNumber" className="flex items-center space-x-2">
+                              <Plane className="w-4 h-4 text-gold" />
+                              <span>Return Flight Number <span className="text-sm font-normal text-gray-500">(Required if booking return)</span></span>
+                            </Label>
+                            <Input
+                              id="returnFlightNumber"
+                              name="returnFlightNumber"
+                              value={formData.returnFlightNumber}
+                              onChange={handleChange}
+                              placeholder="e.g., NZ456"
+                              className="transition-all duration-200 focus:ring-2 focus:ring-gold"
+                            />
+                          </div>
+
+                          <p className="text-xs text-gray-600 mt-4">
+                            Return trip will be from <strong>{formData.dropoffAddress || 'drop-off location'}</strong> back to <strong>{formData.pickupAddress || 'pickup location'}</strong>
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Contact Information */}
+                  <Card className="border-2 border-gray-200 shadow-lg">
+                    <CardContent className="p-8">
+                      <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-2xl font-bold text-gray-900">Contact Information</h2>
+                        {isReturningCustomer && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-green-600 font-medium">Welcome back!</span>
+                            <button type="button" onClick={clearSavedCustomer} className="text-xs text-gray-400 hover:text-red-500 underline">Not you?</button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="name" className="flex items-center space-x-2">
+                            <User className="w-4 h-4 text-gold" />
+                            <span>Full Name *</span>
+                          </Label>
+                          <Input id="name" name="name" value={formData.name} onChange={handleChange} placeholder="John Doe" required className="transition-all duration-200 focus:ring-2 focus:ring-gold" />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <Label htmlFor="email" className="flex items-center space-x-2">
+                              <Mail className="w-4 h-4 text-gold" />
+                              <span>Email *</span>
+                            </Label>
+                            <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="john@example.com" required className="transition-all duration-200 focus:ring-2 focus:ring-gold" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="phone" className="flex items-center space-x-2">
+                              <Phone className="w-4 h-4 text-gold" />
+                              <span>Phone *</span>
+                            </Label>
+                            <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="Your mobile number" required className="transition-all duration-200 focus:ring-2 focus:ring-gold" />
+                          </div>
+                        </div>
+
+                        {/* Notification Preference */}
+                        <div className="space-y-2">
+                          <Label className="flex items-center space-x-2">
+                            <Mail className="w-4 h-4 text-gold" />
+                            <span>Confirmation Preference</span>
+                          </Label>
+                          <div className="flex gap-4">
+                            {[
+                              { value: 'both', label: 'Email + SMS' },
+                              { value: 'email', label: 'Email only' },
+                              { value: 'sms', label: 'SMS only' },
+                            ].map(opt => (
+                              <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name="notificationPreference"
+                                  value={opt.value}
+                                  checked={formData.notificationPreference === opt.value}
+                                  onChange={handleChange}
+                                  className="text-gold focus:ring-gold"
+                                />
+                                <span className="text-sm text-gray-700">{opt.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Promo Code */}
+                        <div className="space-y-2">
+                          <Label>Promo Code</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              value={promoCode}
+                              onChange={(e) => setPromoCode(e.target.value)}
+                              placeholder="Enter promo code"
+                              disabled={!!promoApplied}
+                              className="flex-1"
+                            />
+                            {promoApplied ? (
+                              <Button type="button" variant="outline" onClick={handleRemovePromo} className="text-red-500">Remove</Button>
+                            ) : (
+                              <Button type="button" variant="outline" onClick={handleApplyPromo} disabled={applyingPromo}>
+                                {applyingPromo ? 'Applying...' : 'Apply'}
+                              </Button>
+                            )}
+                          </div>
+                          {promoError && <p className="text-xs text-red-500">{promoError}</p>}
+                          {promoApplied && <p className="text-xs text-green-600 font-medium">You saved ${promoApplied.discountAmount.toFixed(2)} with {promoApplied.code}!</p>}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="notes">Special Requests / Notes</Label>
+                          <Textarea id="notes" name="notes" value={formData.notes} onChange={handleChange} placeholder="Any special requirements or notes..." rows={3} className="transition-all duration-200 focus:ring-2 focus:ring-gold" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
-                  <input type="email" value={form.email} onChange={(e) => update('email', e.target.value)} placeholder="john@example.com"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gold/40 focus:border-gold" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone Number</label>
-                  <input type="tel" value={form.phone} onChange={(e) => update('phone', e.target.value)} placeholder="+64 21 123 4567"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gold/40 focus:border-gold" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Special Requests <span className="text-gray-400">(optional)</span></label>
-                  <textarea value={form.notes} onChange={(e) => update('notes', e.target.value)}
-                    placeholder="Child seat required, meet at arrivals, etc." rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-gold/40 focus:border-gold resize-none" />
-                </div>
 
-                <div className="flex gap-3">
-                  <button onClick={() => setStep(0)} className="flex-1 h-12 border-2 border-gray-200 text-gray-600 hover:border-gray-300 font-semibold rounded-xl transition-all flex items-center justify-center gap-2">
-                    <ArrowLeft className="w-5 h-5" /> Back
-                  </button>
-                  <button
-                    onClick={() => canProceedStep1() ? (setError(''), setStep(2)) : setError('Please fill in name, email and phone')}
-                    className="flex-1 h-12 bg-gold hover:bg-yellow-500 text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-gold/30"
-                  >
-                    Review Booking <ArrowRight className="w-5 h-5" />
-                  </button>
+                {/* Price Summary - Right Side */}
+                <div className="lg:col-span-1">
+                  <Card className="border-2 border-gold/30 sticky top-24 shadow-lg">
+                    <CardContent className="p-8">
+                      <div className="flex items-center space-x-2 mb-6">
+                        <DollarSign className="w-6 h-6 text-gold" />
+                        <h2 className="text-2xl font-bold text-gray-900">Price Estimate</h2>
+                      </div>
+
+                      {pricing.calculating ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto mb-4"></div>
+                          <p className="text-gray-600">Calculating your quote...</p>
+                        </div>
+                      ) : pricing.totalPrice > 0 ? (
+                        <div className="space-y-4">
+                          <div className="text-center py-6">
+                            <p className="text-gray-600 mb-2">Your Quote</p>
+                            <span className="text-5xl font-bold text-gold">${finalTotal.toFixed(2)}</span>
+                            <p className="text-gray-500 text-sm mt-2">NZD - Fixed Price, No Hidden Fees</p>
+                            {promoApplied && (
+                              <p className="text-xs text-green-600 mt-1 font-medium">
+                                You saved ${promoApplied.discountAmount.toFixed(2)} with {promoApplied.code}!
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Price Breakdown */}
+                          <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Trip fare</span>
+                              <span className={`font-medium ${promoApplied ? 'line-through text-gray-400' : ''}`}>
+                                ${(pricing.subtotal - (pricing.fuelSurcharge || 0)).toFixed(2)}
+                              </span>
+                            </div>
+                            {pricing.fuelSurcharge > 0 && (
+                              <div className="flex justify-between text-amber-700">
+                                <span>Fuel surcharge ({pricing.fuelSurchargePercent}%)</span>
+                                <span>${pricing.fuelSurcharge.toFixed(2)}</span>
+                              </div>
+                            )}
+                            {pricing.stripeFee > 0 && (
+                              <div className="flex justify-between text-gray-500">
+                                <span>Card processing fee</span>
+                                <span>${pricing.stripeFee.toFixed(2)}</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between border-t pt-2 font-semibold">
+                              <span>Total</span>
+                              <span className="text-gold">${finalTotal.toFixed(2)}</span>
+                            </div>
+                          </div>
+
+                          <div className="bg-gray-50 rounded-lg p-4 text-center">
+                            <p className="text-sm text-gray-600">
+                              {formData.passengers} passenger{parseInt(formData.passengers) > 1 ? 's' : ''}
+                              {(formData.returnDate && formData.returnTime) && ' · Return trip (both ways included)'}
+                            </p>
+                          </div>
+
+                          <PriceComparison bookaridePrice={finalTotal} distance={pricing.distance} />
+
+                          {/* Route summary */}
+                          {formData.pickupAddress && formData.dropoffAddress && (
+                            <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 space-y-2" data-testid="route-map-container">
+                              <p className="text-sm font-medium text-gray-700">Your route</p>
+                              <p className="text-sm text-gray-600">Pickup: {formData.pickupAddress}</p>
+                              <p className="text-sm text-gray-600">Drop-off: {formData.dropoffAddress}</p>
+                            </div>
+                          )}
+
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <MapPin className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                          <p className="text-gray-500 mb-4">Enter addresses to see price estimate</p>
+                        </div>
+                      )}
+
+                      <div className="mt-6">
+                        <TrustBadges variant="payment" />
+                      </div>
+
+                      {/* Secure Payment Info */}
+                      <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <div className="flex items-center gap-3 mb-2">
+                          <svg className="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            <path d="M9 12l2 2 4-4" />
+                          </svg>
+                          <span className="font-semibold text-gray-800">Secure Payment</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">Pay securely with credit/debit card</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-[#1A1F71] bg-white border border-gray-200 rounded px-2 py-1">VISA</span>
+                          <span className="text-xs font-bold text-[#EB001B] bg-white border border-gray-200 rounded px-2 py-1">Mastercard</span>
+                          <span className="text-xs text-gray-400 ml-2">Secure payment</span>
+                        </div>
+                      </div>
+
+                      <Button
+                        type="submit"
+                        className="w-full mt-6 bg-gold hover:bg-gold-500 text-black font-semibold py-6 text-lg transition-colors duration-200"
+                        disabled={pricing.calculating || pricing.totalPrice === 0 || isProcessingPayment}
+                      >
+                        {isProcessingPayment ? 'Processing...' : 'Book Now'}
+                      </Button>
+                    </CardContent>
+                  </Card>
                 </div>
-              </motion.div>
-            )}
-
-            {/* ── Step 2: Confirm & Pay ── */}
-            {step === 2 && (
-              <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-6 sm:p-8 space-y-5">
-                <h2 className="text-lg font-semibold text-gray-900">Booking Summary</h2>
-
-                <div className="bg-gray-50 rounded-xl p-5 space-y-3 text-sm">
-                  <Row label="Pickup" value={form.pickupAddress} />
-                  {form.pickupAddresses.filter(Boolean).map((a, i) => <Row key={i} label={`Stop ${i + 1}`} value={a} />)}
-                  <Row label="Drop-off" value={form.dropoffAddress} />
-                  <Row label="Date & Time" value={`${form.date} at ${formatTime12h(form.time)}`} />
-                  <Row label="Passengers" value={form.passengers} />
-                  {form.bookReturn && form.returnDate && <Row label="Return" value={`${form.returnDate} at ${form.returnTime}`} />}
-                  {form.departureFlightNumber && <Row label="Departure Flight" value={form.departureFlightNumber} />}
-                  {form.arrivalFlightNumber && <Row label="Arrival Flight" value={form.arrivalFlightNumber} />}
-                  {form.vipAirportPickup && <Row label="VIP Pickup" value="Included" />}
-                  {form.oversizedLuggage && <Row label="Oversized Luggage" value="Included" />}
-                </div>
-
-                <div className="bg-gray-50 rounded-xl p-5 space-y-2 text-sm">
-                  <Row label="Name" value={form.name} />
-                  <Row label="Email" value={form.email} />
-                  <Row label="Phone" value={form.phone} />
-                  {form.notes && <Row label="Notes" value={form.notes} />}
-                </div>
-
-                <PriceBreakdown pricing={pricing} bookReturn={form.bookReturn && !!(form.returnDate && form.returnTime)} />
-
-                <div className="flex gap-3">
-                  <button onClick={() => setStep(1)} className="flex-1 h-12 border-2 border-gray-200 text-gray-600 hover:border-gray-300 font-semibold rounded-xl transition-all flex items-center justify-center gap-2">
-                    <ArrowLeft className="w-5 h-5" /> Back
-                  </button>
-                  <button onClick={submitBooking} disabled={loading}
-                    className="flex-1 h-12 bg-gold hover:bg-yellow-500 text-black font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-gold/30 disabled:opacity-60">
-                    {loading ? <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</> : <><CheckCircle className="w-5 h-5" /> Pay ${pricing?.totalPrice?.toFixed(2)} NZD</>}
-                  </button>
-                </div>
-                <p className="text-xs text-gray-400 text-center">Secure payment via Stripe. Your details are encrypted.</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+            </form>
+          </div>
         </div>
-
-        {/* Trust row */}
-        <div className="mt-6 flex flex-wrap justify-center gap-6 text-xs text-gray-500">
-          {['Fixed prices — no surprises', 'Flight tracking included', 'Free cancellation 24h', '10,000+ happy customers'].map((t) => (
-            <span key={t} className="flex items-center gap-1.5"><CheckCircle className="w-3.5 h-3.5 text-gold" />{t}</span>
-          ))}
-        </div>
-      </div>
+      </section>
     </div>
   )
 }
 
-function Row({ label, value }) {
-  return (
-    <div className="flex justify-between gap-4">
-      <span className="text-gray-500 shrink-0">{label}</span>
-      <span className="text-gray-800 font-medium text-right">{value}</span>
-    </div>
-  )
-}
-
-function formatTime12h(time24) {
-  if (!time24) return ''
-  const [h, m] = time24.split(':').map(Number)
-  const suffix = h >= 12 ? 'PM' : 'AM'
-  const hour12 = h % 12 || 12
-  return `${hour12}:${String(m).padStart(2, '0')} ${suffix}`
-}
+export default BookNow
