@@ -15,6 +15,7 @@ import HobbitonTransfers from './components/pages/HobbitonTransfers'
 import AudienceLanding from './components/pages/AudienceLanding'
 import AdminLogin from './components/pages/admin/AdminLogin'
 import AdminDashboard from './components/pages/admin/AdminDashboard'
+import AdminAuthCallback from './components/pages/admin/AdminAuthCallback'
 
 function AdminGuard({ children }) {
   const token = localStorage.getItem('admin_token')
@@ -61,6 +62,7 @@ export default function App() {
 
       {/* Admin — no header/footer */}
       <Route path="admin/login" element={<AdminLogin />} />
+      <Route path="admin/auth/callback" element={<AdminAuthCallback />} />
       <Route path="admin/dashboard" element={
         <AdminGuard><AdminDashboard /></AdminGuard>
       } />
