@@ -11,6 +11,7 @@ import Privacy from './components/pages/Privacy'
 import NotFound from './components/pages/NotFound'
 import CruiseTransfers from './components/pages/CruiseTransfers'
 import HobbitonTransfers from './components/pages/HobbitonTransfers'
+import AudienceLanding from './components/pages/AudienceLanding'
 import AdminLogin from './components/pages/admin/AdminLogin'
 import AdminDashboard from './components/pages/admin/AdminDashboard'
 
@@ -39,11 +40,17 @@ export default function App() {
         <Route path="cruise-transfers" element={<CruiseTransfers />} />
         <Route path="hobbiton-transfers" element={<HobbitonTransfers />} />
 
+        {/* Audience SEO landing pages */}
+        <Route path="international-visitors" element={<AudienceLanding audience="international-visitors" />} />
+        <Route path="student-transfers" element={<AudienceLanding audience="student-transfers" />} />
+        <Route path="corporate-transfers" element={<AudienceLanding audience="corporate-transfers" />} />
+        <Route path="medical-professionals" element={<AudienceLanding audience="medical-professionals" />} />
+        <Route path="travel-agents" element={<AudienceLanding audience="travel-agents" />} />
+
         {/* Redirect old/placeholder service pages to book-now */}
         <Route path="shared-shuttle" element={<Navigate to="/book-now" replace />} />
         <Route path="website-usage-policy" element={<Navigate to="/privacy-policy" replace />} />
         <Route path="drive-with-us" element={<Navigate to="/contact" replace />} />
-        <Route path="travel-agents" element={<Navigate to="/contact" replace />} />
 
         {/* Catch-all (exclude admin) */}
         <Route path="*" element={<NotFound />} />

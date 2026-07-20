@@ -1,8 +1,7 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
-import { ArrowRight, Plane, MapPin, Star, Check, Shield, Clock, Award, Users, Calendar, Globe, Zap } from 'lucide-react'
+import { ArrowRight, Plane, MapPin, Star, Check, Shield, Clock, Award, Users, Calendar, Globe } from 'lucide-react'
 import PageMeta from '../PageMeta'
 
 const SERVICES = [
@@ -42,18 +41,7 @@ const fadeUp = {
 }
 
 export default function Home() {
-  const navigate = useNavigate()
   const { t } = useTranslation()
-  const [quote, setQuote] = useState({ pickup: '', dropoff: '' })
-
-  const goToQuote = (e) => {
-    e.preventDefault()
-    const params = new URLSearchParams()
-    if (quote.pickup) params.set('pickup', quote.pickup)
-    if (quote.dropoff) params.set('dropoff', quote.dropoff)
-    navigate(`/book-now${params.toString() ? `?${params}` : ''}`)
-  }
-
   return (
     <div className="min-h-screen bg-white">
       <PageMeta title={null} description="Premium airport transfers across Auckland — private door-to-door shuttles, Hobbiton tours and cruise terminal transfers. Instant online pricing, fixed rates, international bookings welcome." />
@@ -72,7 +60,6 @@ export default function Home() {
         </div>
 
         <div className="container-max px-4 sm:px-6 lg:px-8 relative z-10 py-28 sm:py-32">
-          <div className="grid lg:grid-cols-[1fr,420px] gap-12 lg:gap-16 items-center">
           <div className="max-w-3xl">
             <motion.div initial="hidden" animate="visible" variants={fadeUp}>
               <div className="flex flex-wrap gap-3 mb-8">
@@ -150,67 +137,6 @@ export default function Home() {
                 </div>
               ))}
             </motion.div>
-          </div>
-
-          {/* Instant quote card */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35, duration: 0.5, ease: 'easeOut' }}
-            className="w-full max-w-md mx-auto lg:mx-0"
-          >
-            <form
-              onSubmit={goToQuote}
-              className="bg-black/50 backdrop-blur-md border border-white/15 rounded-2xl p-6 sm:p-8 shadow-2xl"
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <Zap className="w-5 h-5 text-gold" />
-                <h2 className="text-white font-bold text-xl">{t('quote.title')}</h2>
-              </div>
-              <p className="text-white/60 text-sm mb-6">{t('quote.subtitle')}</p>
-
-              <label className="block mb-4">
-                <span className="text-white/70 text-xs font-semibold uppercase tracking-wide">{t('quote.pickup')}</span>
-                <div className="relative mt-1.5">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gold" />
-                  <input
-                    type="text"
-                    value={quote.pickup}
-                    onChange={(e) => setQuote((q) => ({ ...q, pickup: e.target.value }))}
-                    placeholder={t('quote.pickupPh')}
-                    className="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-10 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
-                  />
-                </div>
-              </label>
-
-              <label className="block mb-6">
-                <span className="text-white/70 text-xs font-semibold uppercase tracking-wide">{t('quote.dropoff')}</span>
-                <div className="relative mt-1.5">
-                  <Plane className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gold" />
-                  <input
-                    type="text"
-                    value={quote.dropoff}
-                    onChange={(e) => setQuote((q) => ({ ...q, dropoff: e.target.value }))}
-                    placeholder={t('quote.dropoffPh')}
-                    className="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-10 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
-                  />
-                </div>
-              </label>
-
-              <button
-                type="submit"
-                className="w-full inline-flex items-center justify-center gap-2 h-13 py-3.5 bg-gold hover:bg-gold-500 text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 group"
-              >
-                {t('quote.cta')}
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-
-              <div className="flex items-center justify-center gap-4 mt-4 text-white/50 text-xs">
-                <span className="flex items-center gap-1"><Check className="w-3.5 h-3.5 text-gold" /> {t('quote.noAccount')}</span>
-                <span className="flex items-center gap-1"><Check className="w-3.5 h-3.5 text-gold" /> {t('quote.secure')}</span>
-              </div>
-            </form>
-          </motion.div>
           </div>
 
           {/* Stats band */}

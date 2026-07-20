@@ -14,14 +14,18 @@ const FOOTER_LINKS = {
     { label: 'Private Transfers', path: '/services' },
     { label: 'Hobbiton Transfers', path: '/hobbiton-transfers' },
     { label: 'Cruise Transfers', path: '/cruise-transfers' },
-    { label: 'Shared Shuttle', path: '/shared-shuttle' },
+  ],
+  'Who We Serve': [
+    { label: 'International Visitors', path: '/international-visitors' },
+    { label: 'Students', path: '/student-transfers' },
+    { label: 'Business Travellers', path: '/corporate-transfers' },
+    { label: 'Healthcare Professionals', path: '/medical-professionals' },
+    { label: 'Travel Agents', path: '/travel-agents' },
   ],
   Legal: [
     { label: 'Privacy Policy', path: '/privacy-policy' },
     { label: 'Terms & Conditions', path: '/terms-and-conditions' },
-    { label: 'Website Usage', path: '/website-usage-policy' },
     { label: 'Drive With Us', path: '/drive-with-us' },
-    { label: 'Travel Agents', path: '/travel-agents' },
   ],
 }
 
@@ -29,7 +33,7 @@ export default function Footer() {
   return (
     <footer className="bg-gray-900 text-gray-300">
       <div className="container-max px-4 sm:px-6 lg:px-8 pt-16 pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
 
           <div>
             <Link to="/" className="inline-block mb-5">
