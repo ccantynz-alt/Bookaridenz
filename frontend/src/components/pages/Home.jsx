@@ -178,6 +178,41 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── OUR FLEET ───────────────────────────────────────── */}
+      <section className="py-24 bg-white">
+        <div className="container-max px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
+            <div>
+              <div className="inline-flex items-center gap-2 bg-gold/10 border border-gold/30 rounded-full px-4 py-2 mb-6">
+                <Star className="w-4 h-4 text-gold fill-gold" />
+                <span className="text-gray-700 font-medium text-sm">Our actual fleet — not a stock photo</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-5">Modern Vehicles, Room for Everyone</h2>
+              <p className="text-gray-600 text-lg leading-relaxed mb-4">
+                Late-model Toyota Hiace high-roof vans with air conditioning, comfortable seating for up to 11 passengers, and space for all your luggage — plus trailers for the big loads.
+              </p>
+              <p className="text-gray-600 text-lg leading-relaxed mb-8">
+                Immaculately maintained, fully insured, and driven by professionals who know Auckland inside out.
+              </p>
+              <Link
+                to="/book-now"
+                className="inline-flex items-center gap-2 text-gold font-semibold text-lg hover:gap-3 transition-all"
+              >
+                Book your ride <ArrowRight className="w-5 h-5" />
+              </Link>
+            </div>
+            <div>
+              <img
+                src="/images/fleet-van.jpg"
+                alt="Book A Ride NZ modern Toyota Hiace high-roof passenger van"
+                className="rounded-3xl shadow-2xl w-full h-[440px] object-cover border-4 border-white"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── SERVICES ────────────────────────────────────────── */}
       <section className="py-24 bg-gray-50">
         <div className="container-max px-4 sm:px-6 lg:px-8">
