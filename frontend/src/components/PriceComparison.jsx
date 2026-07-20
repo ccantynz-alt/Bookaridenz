@@ -1,20 +1,21 @@
-import React from 'react'
-import { motion } from 'framer-motion'
-import { Check, X, TrendingDown, Shield, Clock, Star } from 'lucide-react'
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Check, X, TrendingDown, Shield, Clock, Star } from 'lucide-react';
 
 const PriceComparison = ({ bookaridePrice, distance }) => {
   // Ensure bookaridePrice is a proper number and round it
-  const roundedPrice = Math.round(Number(bookaridePrice) || 0)
-
-  // Estimate competitor prices based on distance (approximate Auckland rates)
-  const uberEstimate = Math.round(distance * 2.8 + 8)
-  const taxiEstimate = Math.round(distance * 3.5 + 5)
-
-  const savings = Math.round(Math.max(uberEstimate - roundedPrice, taxiEstimate - roundedPrice, 0))
-  const savingsPercent = Math.round((savings / Math.max(uberEstimate, taxiEstimate)) * 100)
+  const roundedPrice = Math.round(Number(bookaridePrice) || 0);
+  
+  // Estimate competitor prices based on distance
+  // These are approximate rates for Auckland
+  const uberEstimate = Math.round(distance * 2.8 + 8); // Base fare + per km
+  const taxiEstimate = Math.round(distance * 3.5 + 5); // Higher per km rate
+  
+  const savings = Math.round(Math.max(uberEstimate - roundedPrice, taxiEstimate - roundedPrice, 0));
+  const savingsPercent = Math.round((savings / Math.max(uberEstimate, taxiEstimate)) * 100);
 
   if (!roundedPrice || roundedPrice <= 0 || !distance) {
-    return null
+    return null;
   }
 
   return (
@@ -38,9 +39,9 @@ const PriceComparison = ({ bookaridePrice, distance }) => {
 
       {/* Price Comparison Table */}
       <div className="grid grid-cols-3 gap-3 text-center">
-        {/* Book A Ride */}
+        {/* BookaRide */}
         <div className="bg-white rounded-lg p-3 border-2 border-gold shadow-sm">
-          <div className="text-xs text-gray-500 mb-1">Book A Ride</div>
+          <div className="text-xs text-gray-500 mb-1">BookaRide</div>
           <div className="text-xl font-bold text-gold">${roundedPrice}</div>
           <div className="flex items-center justify-center gap-1 text-green-600 text-xs mt-1">
             <Check className="w-3 h-3" />
@@ -69,7 +70,7 @@ const PriceComparison = ({ bookaridePrice, distance }) => {
         </div>
       </div>
 
-      {/* Why Book A Ride */}
+      {/* Why BookaRide */}
       <div className="mt-4 grid grid-cols-3 gap-2 text-xs text-gray-600">
         <div className="flex items-center gap-1">
           <Shield className="w-3 h-3 text-gold" />
@@ -89,7 +90,7 @@ const PriceComparison = ({ bookaridePrice, distance }) => {
         *Estimates based on standard rates. Actual rideshare/taxi prices may vary due to surge pricing, traffic, and demand.
       </p>
     </motion.div>
-  )
-}
+  );
+};
 
-export default PriceComparison
+export default PriceComparison;

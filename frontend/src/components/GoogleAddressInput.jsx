@@ -1,14 +1,21 @@
-import React, { useRef, useCallback, useState, useEffect } from 'react'
-import { Input } from './ui/input'
-import api from '../lib/api'
+import React, { useRef, useCallback, useState, useEffect } from 'react';
+import { Input } from './ui/input';
+import axios from 'axios';
+import { API } from '../config/api';
 
 /**
  * GoogleAddressInput — Server-side autocomplete ONLY.
  *
- * Google's native Autocomplete widget is NOT used (it can lock the input
- * when an API key is invalid/expired/restricted). Instead we call our own
- * /api/places/autocomplete endpoint, which queries Google's Places API
- * server-side. The dropdown is 100% ours and the input is always typeable.
+ * LOCKED DECISION (2026-04-09): Google's native Autocomplete widget
+ * is NOT used. It locked the input field when the API key was invalid,
+ * expired, or restricted — making the entire booking form unusable.
+ * This happened repeatedly and cost the business real customers.
+ *
+ * Instead, we use our own /api/places/autocomplete endpoint which
+ * calls Google's Places API server-side. The dropdown is 100% ours.
+ * Google's JS library NEVER loads, NEVER touches the input.
+ *
+ * The input is ALWAYS typeable. Always. No exceptions.
  */
 
 const GoogleAddressInput = ({
@@ -22,90 +29,90 @@ const GoogleAddressInput = ({
   className = '',
   region = 'nz',
 }) => {
-  const inputRef = useRef(null)
-  const [suggestions, setSuggestions] = useState([])
-  const [showDropdown, setShowDropdown] = useState(false)
-  const [activeIndex, setActiveIndex] = useState(-1)
-  const debounceRef = useRef(null)
-  const dropdownRef = useRef(null)
+  const inputRef = useRef(null);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const debounceRef = useRef(null);
+  const dropdownRef = useRef(null);
 
-  useEffect(() => () => clearTimeout(debounceRef.current), [])
+  useEffect(() => () => clearTimeout(debounceRef.current), []);
 
   // Fetch suggestions from our server-side proxy
   const fetchSuggestions = useCallback((text) => {
-    clearTimeout(debounceRef.current)
+    clearTimeout(debounceRef.current);
     if (!text || text.length < 3) {
-      setSuggestions([])
-      setShowDropdown(false)
-      return
+      setSuggestions([]);
+      setShowDropdown(false);
+      return;
     }
     debounceRef.current = setTimeout(async () => {
       try {
-        const resp = await api.get('/places/autocomplete', {
+        const resp = await axios.get(`${API}/places/autocomplete`, {
           params: { input: text, region },
-        })
-        const preds = resp.data?.predictions || []
-        setSuggestions(preds)
-        setShowDropdown(preds.length > 0)
-        setActiveIndex(-1)
+        });
+        const preds = resp.data?.predictions || [];
+        setSuggestions(preds);
+        setShowDropdown(preds.length > 0);
+        setActiveIndex(-1);
       } catch (err) {
-        console.error('Autocomplete fetch failed:', err)
-        setSuggestions([])
-        setShowDropdown(false)
+        console.error('Autocomplete fetch failed:', err);
+        setSuggestions([]);
+        setShowDropdown(false);
       }
-    }, 250)
-  }, [region])
+    }, 250);
+  }, [region]);
 
   const handleChange = (e) => {
-    const val = e.target.value
-    if (onChange) onChange(val)
-    fetchSuggestions(val)
-  }
+    const val = e.target.value;
+    if (onChange) onChange(val);
+    fetchSuggestions(val);
+  };
 
   const handleSelectSuggestion = (description) => {
-    setShowDropdown(false)
-    setSuggestions([])
-    setActiveIndex(-1)
-    if (onSelect) onSelect(description)
-    else if (onChange) onChange(description)
-  }
+    setShowDropdown(false);
+    setSuggestions([]);
+    setActiveIndex(-1);
+    if (onSelect) onSelect(description);
+    else if (onChange) onChange(description);
+  };
 
   // Keyboard navigation
   const handleKeyDown = (e) => {
-    if (!showDropdown || suggestions.length === 0) return
+    if (!showDropdown || suggestions.length === 0) return;
     if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      setActiveIndex((prev) => Math.min(prev + 1, suggestions.length - 1))
+      e.preventDefault();
+      setActiveIndex(prev => Math.min(prev + 1, suggestions.length - 1));
     } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setActiveIndex((prev) => Math.max(prev - 1, 0))
+      e.preventDefault();
+      setActiveIndex(prev => Math.max(prev - 1, 0));
     } else if (e.key === 'Enter' && activeIndex >= 0) {
-      e.preventDefault()
-      handleSelectSuggestion(suggestions[activeIndex].description)
+      e.preventDefault();
+      handleSelectSuggestion(suggestions[activeIndex].description);
     } else if (e.key === 'Escape') {
-      setShowDropdown(false)
+      setShowDropdown(false);
     }
-  }
+  };
 
   // Close dropdown on outside click
   useEffect(() => {
-    if (!showDropdown) return
+    if (!showDropdown) return;
     const handleClick = (e) => {
       if (inputRef.current && !inputRef.current.parentElement?.contains(e.target)) {
-        setShowDropdown(false)
+        setShowDropdown(false);
       }
-    }
-    document.addEventListener('pointerdown', handleClick)
-    return () => document.removeEventListener('pointerdown', handleClick)
-  }, [showDropdown])
+    };
+    document.addEventListener('pointerdown', handleClick);
+    return () => document.removeEventListener('pointerdown', handleClick);
+  }, [showDropdown]);
 
   // Scroll active suggestion into view
   useEffect(() => {
     if (activeIndex >= 0 && dropdownRef.current) {
-      const item = dropdownRef.current.children[activeIndex]
-      if (item) item.scrollIntoView({ block: 'nearest' })
+      const item = dropdownRef.current.children[activeIndex];
+      if (item) item.scrollIntoView({ block: 'nearest' });
     }
-  }, [activeIndex])
+  }, [activeIndex]);
 
   return (
     <div className="relative">
@@ -115,7 +122,7 @@ const GoogleAddressInput = ({
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
-        onFocus={() => { if (suggestions.length > 0) setShowDropdown(true) }}
+        onFocus={() => { if (suggestions.length > 0) setShowDropdown(true); }}
         placeholder={placeholder}
         required={required}
         disabled={disabled}
@@ -143,7 +150,7 @@ const GoogleAddressInput = ({
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default GoogleAddressInput
+export default GoogleAddressInput;

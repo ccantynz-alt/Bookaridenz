@@ -2,7 +2,8 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import Home from './components/pages/Home'
 import Services from './components/pages/Services'
-import BookNow from './components/pages/BookNow'
+import BookNow from './pages/BookNow'
+import { Toaster } from './components/ui/sonner'
 import About from './components/pages/About'
 import Contact from './components/pages/Contact'
 import PaymentSuccess from './components/pages/PaymentSuccess'
@@ -23,6 +24,8 @@ function AdminGuard({ children }) {
 
 export default function App() {
   return (
+    <>
+    <Toaster />
     <Routes>
       {/* Public routes with header/footer */}
       <Route element={<Layout />}>
@@ -63,5 +66,6 @@ export default function App() {
       } />
       <Route path="admin" element={<Navigate to="/admin/dashboard" replace />} />
     </Routes>
+    </>
   )
 }

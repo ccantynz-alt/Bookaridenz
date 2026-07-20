@@ -1,37 +1,36 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useSearchParams } from 'react-router-dom'
-import { MapPin, Calendar, Users, DollarSign, Clock, Mail, Phone, User, Plane, CheckCircle } from 'lucide-react'
-import { Button } from '../ui/button'
-import { Input } from '../ui/input'
-import { Label } from '../ui/label'
-import { Textarea } from '../ui/textarea'
-import { Card, CardContent } from '../ui/card'
-import { toast, Toaster } from 'sonner'
-import api from '../../lib/api'
-import PageMeta from '../PageMeta'
-import LoadingSpinner from '../LoadingSpinner'
-import { CustomDatePicker, CustomTimePicker } from '../DateTimePicker'
-import PriceComparison from '../PriceComparison'
-import TrustBadges from '../TrustBadges'
-import GoogleAddressInput from '../GoogleAddressInput'
+import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
+import { MapPin, Calendar, Users, DollarSign, Clock, Mail, Phone, User, Wrench, Plane, CheckCircle } from 'lucide-react';
+import siteConfig from '../config/siteConfig';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Textarea } from '../components/ui/textarea';
+import { Card, CardContent } from '../components/ui/card';
+import { toast } from 'sonner';
+import axios from 'axios';
+import SEO from '../components/SEO';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { CustomDatePicker, CustomTimePicker } from '../components/DateTimePicker';
+import PriceComparison from '../components/PriceComparison';
+import TrustBadges from '../components/TrustBadges';
+import GoogleAddressInput from '../components/GoogleAddressInput';
+import { API } from '../config/api';
 
 const DROPOFF_QUICK_ADDRESSES = [
   { label: 'Auckland Airport', address: 'Auckland Airport, Ray Emery Drive, Mangere, Auckland 2022, New Zealand' },
   { label: 'Auckland Domestic', address: 'Auckland Airport, Ray Emery Drive, Mangere, Auckland 2022, New Zealand' },
-]
-
-const SELECT_CLASS =
-  'flex h-10 w-full appearance-none rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold'
+];
 
 export const BookNow = () => {
-  const { i18n } = useTranslation()
-  const [searchParams] = useSearchParams()
+  const { i18n } = useTranslation();
 
   const [formData, setFormData] = useState({
     serviceType: '',
-    pickupAddress: searchParams.get('pickup') || '',
-    dropoffAddress: searchParams.get('dropoff') || '',
+    pickupAddress: '',
+    dropoffAddress: '',
     date: '',
     time: '',
     passengers: '1',
@@ -50,29 +49,29 @@ export const BookNow = () => {
     phone: '',
     notes: '',
     paymentMethod: 'card',
-    notificationPreference: 'both',
-  })
+    notificationPreference: 'both'
+  });
 
   // Returning customer
-  const [isReturningCustomer, setIsReturningCustomer] = useState(false)
+  const [isReturningCustomer, setIsReturningCustomer] = useState(false);
 
   useEffect(() => {
-    const savedCustomer = localStorage.getItem('bookaride_customer')
+    const savedCustomer = localStorage.getItem('bookaride_customer');
     if (savedCustomer) {
       try {
-        const customer = JSON.parse(savedCustomer)
+        const customer = JSON.parse(savedCustomer);
         setFormData(prev => ({
           ...prev,
           name: customer.name || '',
           email: customer.email || '',
-          phone: customer.phone || '',
-        }))
-        setIsReturningCustomer(true)
+          phone: customer.phone || ''
+        }));
+        setIsReturningCustomer(true);
       } catch (e) {
-        console.error('Error loading saved customer:', e)
+        console.error('Error loading saved customer:', e);
       }
     }
-  }, [])
+  }, []);
 
   const saveCustomerDetails = () => {
     if (formData.name && formData.email) {
@@ -80,23 +79,23 @@ export const BookNow = () => {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
-        lastBooking: new Date().toISOString(),
-      }))
+        lastBooking: new Date().toISOString()
+      }));
     }
-  }
+  };
 
   const clearSavedCustomer = () => {
-    localStorage.removeItem('bookaride_customer')
-    setFormData(prev => ({ ...prev, name: '', email: '', phone: '' }))
-    setIsReturningCustomer(false)
-  }
+    localStorage.removeItem('bookaride_customer');
+    setFormData(prev => ({ ...prev, name: '', email: '', phone: '' }));
+    setIsReturningCustomer(false);
+  };
 
   // Date/Time picker states
-  const [pickupDate, setPickupDate] = useState(null)
-  const [pickupTime, setPickupTime] = useState(null)
-  const [flightTimePicker, setFlightTimePicker] = useState(null)
-  const [returnDatePicker, setReturnDatePicker] = useState(null)
-  const [returnTimePicker, setReturnTimePicker] = useState(null)
+  const [pickupDate, setPickupDate] = useState(null);
+  const [pickupTime, setPickupTime] = useState(null);
+  const [flightTimePicker, setFlightTimePicker] = useState(null);
+  const [returnDatePicker, setReturnDatePicker] = useState(null);
+  const [returnTimePicker, setReturnTimePicker] = useState(null);
 
   const [pricing, setPricing] = useState({
     distance: 0,
@@ -111,53 +110,55 @@ export const BookNow = () => {
     totalPrice: 0,
     calculating: false,
     promoCode: null,
-    promoDiscount: 0,
-  })
+    promoDiscount: 0
+  });
 
   // Promo code state
-  const [promoCode, setPromoCode] = useState('')
-  const [promoApplied, setPromoApplied] = useState(null)
-  const [promoError, setPromoError] = useState('')
-  const [applyingPromo, setApplyingPromo] = useState(false)
+  const [promoCode, setPromoCode] = useState('');
+  const [promoApplied, setPromoApplied] = useState(null);
+  const [promoError, setPromoError] = useState('');
+  const [applyingPromo, setApplyingPromo] = useState(false);
+  const [hasPromoFromPopup, setHasPromoFromPopup] = useState(false);
 
   useEffect(() => {
-    const savedPromo = localStorage.getItem('promoCode')
+    const savedPromo = localStorage.getItem('promoCode');
     if (savedPromo) {
-      setPromoCode(savedPromo)
-      localStorage.removeItem('promoCode')
+      setPromoCode(savedPromo);
+      setHasPromoFromPopup(true);
+      localStorage.removeItem('promoCode');
     }
-  }, [])
+  }, []);
 
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
-  const finalTotal = pricing.totalPrice
+  const finalTotal = pricing.totalPrice;
 
   const serviceOptions = [
     { value: 'airport-transfer', label: 'Airport Transfer' },
-    { value: 'private-transfer', label: 'Private Transfer' },
-  ]
+    { value: 'private-transfer', label: 'Private Transfer' }
+  ];
 
   // Calculate price when key fields change
-  const priceCalcRef = useRef(0) // Guard against stale API responses
-  const priceCalcTimerRef = useRef(null)
+  const priceCalcRef = useRef(0); // Guard against stale API responses
+  const priceCalcTimerRef = useRef(null);
   useEffect(() => {
     if (formData.pickupAddress && formData.dropoffAddress && formData.serviceType) {
       // Debounce price calculation to avoid hammering API when multiple fields change at once
-      if (priceCalcTimerRef.current) clearTimeout(priceCalcTimerRef.current)
+      if (priceCalcTimerRef.current) clearTimeout(priceCalcTimerRef.current);
       priceCalcTimerRef.current = setTimeout(() => {
-        calculatePrice()
-      }, 400)
+        calculatePrice();
+      }, 400);
     }
-    return () => clearTimeout(priceCalcTimerRef.current)
-  }, [formData.pickupAddress, formData.dropoffAddress, formData.passengers, formData.serviceType, formData.returnDate, formData.returnTime, formData.vipAirportPickup, formData.oversizedLuggage, formData.goldCard])
+    return () => clearTimeout(priceCalcTimerRef.current);
+  }, [formData.pickupAddress, formData.dropoffAddress, formData.passengers, formData.serviceType, formData.returnDate, formData.returnTime, formData.vipAirportPickup, formData.oversizedLuggage, formData.goldCard]);
 
   const calculatePrice = async () => {
-    const requestId = ++priceCalcRef.current
-    setPricing(prev => ({ ...prev, calculating: true }))
+    const requestId = ++priceCalcRef.current;
+    setPricing(prev => ({ ...prev, calculating: true }));
 
     try {
-      const hasReturnTrip = !!(formData.returnDate && formData.returnTime)
-      const response = await api.post('/calculate-price', {
+      const hasReturnTrip = !!(formData.returnDate && formData.returnTime);
+      const response = await axios.post(`${API}/calculate-price`, {
         serviceType: formData.serviceType,
         pickupAddress: formData.pickupAddress,
         dropoffAddress: formData.dropoffAddress,
@@ -165,13 +166,13 @@ export const BookNow = () => {
         vipAirportPickup: formData.vipAirportPickup,
         oversizedLuggage: formData.oversizedLuggage,
         goldCard: formData.goldCard,
-        bookReturn: hasReturnTrip,
-      }, { timeout: 12000 })
+        bookReturn: hasReturnTrip
+      }, { timeout: 12000 });
 
       // Discard stale response if a newer request was fired
-      if (requestId !== priceCalcRef.current) return
+      if (requestId !== priceCalcRef.current) return;
 
-      const data = response.data
+      const data = response.data;
       setPricing({
         distance: data.distance,
         basePrice: data.basePrice,
@@ -183,82 +184,98 @@ export const BookNow = () => {
         stripeFee: data.stripeFee ?? Math.round(((data.subtotal * 0.029) + 0.30) * 100) / 100,
         subtotal: data.subtotal,
         totalPrice: data.totalPrice,
-        calculating: false,
-      })
+        calculating: false
+      });
     } catch (error) {
-      if (requestId !== priceCalcRef.current) return
-      console.error('Error calculating price:', error)
-      setPricing(prev => ({ ...prev, calculating: false }))
-      toast.error('Unable to calculate distance. Please check addresses.')
+      if (requestId !== priceCalcRef.current) return;
+      console.error('Error calculating price:', error);
+      setPricing(prev => ({ ...prev, calculating: false }));
+      toast.error('Unable to calculate distance. Please check addresses.');
     }
-  }
+  };
+
+  const handleApplyPromoWithSubtotal = async (code, subtotal) => {
+    setApplyingPromo(true);
+    setPromoError('');
+    try {
+      const response = await axios.post(`${API}/validate-promo`, { code, subtotal });
+      setPromoApplied(response.data);
+      toast.success(`Promo code applied! You saved $${response.data.discountAmount.toFixed(2)}`);
+    } catch (error) {
+      setPromoError(error.response?.data?.detail || 'Invalid promo code');
+      setPromoApplied(null);
+    } finally {
+      setApplyingPromo(false);
+    }
+  };
 
   const handleApplyPromo = async () => {
-    if (!promoCode.trim()) { setPromoError('Please enter a promo code'); return }
-    if (pricing.subtotal <= 0) { setPromoError('Get a quote first, then your code will be applied automatically'); return }
+    if (!promoCode.trim()) { setPromoError('Please enter a promo code'); return; }
+    if (pricing.subtotal <= 0) { setPromoError('Get a quote first, then your code will be applied automatically'); return; }
 
-    setApplyingPromo(true)
-    setPromoError('')
+    setApplyingPromo(true);
+    setPromoError('');
     try {
-      const response = await api.post('/validate-promo', { code: promoCode.trim(), subtotal: pricing.subtotal })
-      setPromoApplied(response.data)
-      toast.success(`Promo code applied! You saved $${response.data.discountAmount.toFixed(2)}`)
+      const response = await axios.post(`${API}/validate-promo`, { code: promoCode.trim(), subtotal: pricing.subtotal });
+      setPromoApplied(response.data);
+      toast.success(`Promo code applied! You saved $${response.data.discountAmount.toFixed(2)}`);
     } catch (error) {
-      setPromoError(error.response?.data?.detail || 'Invalid promo code')
-      setPromoApplied(null)
+      setPromoError(error.response?.data?.detail || 'Invalid promo code');
+      setPromoApplied(null);
     } finally {
-      setApplyingPromo(false)
+      setApplyingPromo(false);
     }
-  }
+  };
 
   const handleRemovePromo = () => {
-    setPromoApplied(null)
-    setPromoCode('')
-    setPromoError('')
-  }
+    setPromoApplied(null);
+    setPromoCode('');
+    setPromoError('');
+  };
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleSelectChange = (name, value) => {
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // Prevent double-submit while processing
-    if (isProcessingPayment) return
+    if (isProcessingPayment) return;
 
-    if (!formData.serviceType) { toast.error('Please select a service type'); return }
-    if (!formData.pickupAddress || !formData.dropoffAddress) { toast.error('Please enter both pickup and drop-off addresses'); return }
-    if (!formData.date || !formData.time) { toast.error('Please select pickup date and time'); return }
-    if (!formData.name || !formData.email || !formData.phone) { toast.error('Please fill in all contact information'); return }
+    if (!formData.serviceType) { toast.error('Please select a service type'); return; }
+    if (!formData.pickupAddress || !formData.dropoffAddress) { toast.error('Please enter both pickup and drop-off addresses'); return; }
+    if (!formData.date || !formData.time) { toast.error('Please select pickup date and time'); return; }
+    if (!formData.name || !formData.email || !formData.phone) { toast.error('Please fill in all contact information'); return; }
 
     // Validate return trip fields
-    const hasReturnTrip = !!(formData.returnDate && formData.returnTime)
-    const isAirportTransfer = formData.serviceType?.toLowerCase().includes('airport')
+    const hasReturnTrip = !!(formData.returnDate && formData.returnTime);
+    const isAirportTransfer = formData.serviceType?.toLowerCase().includes('airport');
 
     // Catch case where customer enters return flight number but forgets date/time
     if (formData.returnFlightNumber && formData.returnFlightNumber.trim() && !hasReturnTrip) {
-      toast.error('You entered a return flight number but no return date and time. Please add return date and time, or clear the flight number for a one-way trip.')
-      return
+      toast.error('You entered a return flight number but no return date and time. Please add return date and time, or clear the flight number for a one-way trip.');
+      return;
     }
 
     if (isAirportTransfer && hasReturnTrip) {
       if (!formData.returnFlightNumber || !formData.returnFlightNumber.trim()) {
-        toast.error('Flight number is mandatory for return trips. Bookings without flight numbers may face cancellation.')
-        return
+        toast.error('Flight number is mandatory for return trips. Bookings without flight numbers may face cancellation.');
+        return;
       }
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(formData.email)) { toast.error('Please enter a valid email address'); return }
-    if (pricing.totalPrice === 0) { toast.error('Please wait for price calculation to complete'); return }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) { toast.error('Please enter a valid email address'); return; }
+    if (pricing.totalPrice === 0) { toast.error('Please wait for price calculation to complete'); return; }
 
-    setIsProcessingPayment(true)
+    setIsProcessingPayment(true);
 
     try {
       // Map simplified fields to backend-expected fields for compatibility
@@ -278,63 +295,88 @@ export const BookNow = () => {
         pricing: pricing,
         status: 'pending',
         language: i18n.language,
-        createdAt: new Date(),
-      }
+        createdAt: new Date()
+      };
 
-      const bookingResponse = await api.post('/bookings', bookingData, { timeout: 15000 })
-      const booking = bookingResponse.data
+      const bookingResponse = await axios.post(`${API}/bookings`, bookingData, { timeout: 15000 });
+      const booking = bookingResponse.data;
 
-      saveCustomerDetails()
+      saveCustomerDetails();
 
       try {
-        const checkoutResponse = await api.post('/payment/create-checkout', {
+        const checkoutResponse = await axios.post(`${API}/payment/create-checkout`, {
           booking_id: booking.id,
-          origin_url: window.location.origin,
-        }, { timeout: 15000 })
+          origin_url: window.location.origin
+        }, { timeout: 15000 });
         if (checkoutResponse.data?.url) {
-          window.location.href = checkoutResponse.data.url
+          window.location.href = checkoutResponse.data.url;
         } else {
-          setIsProcessingPayment(false)
-          toast.success(`Booking #${booking.referenceNumber || booking.id?.slice(0, 8)} created! We'll email you a payment link shortly.`)
+          setIsProcessingPayment(false);
+          toast.success(`Booking #${booking.referenceNumber || booking.id?.slice(0, 8)} created! We'll email you a payment link shortly.`);
         }
       } catch (paymentError) {
-        setIsProcessingPayment(false)
-        const ref = booking?.referenceNumber || booking?.id?.slice(0, 8)
-        toast.success(`Booking #${ref} created! Payment redirect failed - we'll contact you with payment details.`)
+        setIsProcessingPayment(false);
+        const ref = booking?.referenceNumber || booking?.id?.slice(0, 8);
+        toast.success(`Booking #${ref} created! Payment redirect failed - we'll contact you with payment details.`);
       }
     } catch (error) {
-      console.error('Error submitting booking:', error)
-      setIsProcessingPayment(false)
-      const status = error.response?.status
-      const data = error.response?.data || {}
-      const detail = data.detail ?? data.message ?? data.error
-      let msg = 'Failed to submit booking. Please try again.'
+      console.error('Error submitting booking:', error);
+      setIsProcessingPayment(false);
+      const status = error.response?.status;
+      const data = error.response?.data || {};
+      const detail = data.detail ?? data.message ?? data.error;
+      let msg = 'Failed to submit booking. Please try again.';
       if (!error.response) {
-        msg = 'Cannot reach server. Check your connection or try again later.'
+        msg = 'Cannot reach server. Check your connection or try again later.';
       } else if (Array.isArray(detail)) {
         const parts = detail.map((e) => {
-          const field = Array.isArray(e.loc) ? e.loc[e.loc.length - 1] : null
-          return field && e.msg ? `${field}: ${e.msg}` : (e.msg || e.loc?.join('.'))
-        }).filter(Boolean)
-        msg = parts.length ? parts.slice(0, 3).join('. ') : msg
+          const field = Array.isArray(e.loc) ? e.loc[e.loc.length - 1] : null;
+          return field && e.msg ? `${field}: ${e.msg}` : (e.msg || e.loc?.join('.'));
+        }).filter(Boolean);
+        msg = parts.length ? parts.slice(0, 3).join('. ') : msg;
       } else if (typeof detail === 'string' && detail.trim()) {
-        msg = detail
+        msg = detail;
       } else if (status === 404) {
-        msg = 'Booking service unavailable. Please contact us.'
+        msg = 'Booking service unavailable. Please contact us.';
       } else if (status) {
-        msg = `Booking failed (${status}). ${typeof detail === 'string' ? detail : 'Please try again.'}`
+        msg = `Booking failed (${status}). ${typeof detail === 'string' ? detail : 'Please try again.'}`;
       }
-      toast.error(msg)
+      toast.error(msg);
     }
+  };
+
+  if (siteConfig.maintenanceMode === true) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center px-4">
+        <SEO title="Under Maintenance - Book A Ride NZ" description="Online booking is temporarily under maintenance." canonical="/book-now" />
+        <div className="max-w-lg text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-amber-500/20 mb-8">
+            <Wrench className="w-10 h-10 text-amber-400" />
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">Under Maintenance</h1>
+          <p className="text-xl text-gray-300 mb-8">
+            Online booking is temporarily unavailable while we update our systems. Please call or email us to make your booking.
+          </p>
+          <div className="space-y-4 text-gray-400">
+            <p><a href={`mailto:${siteConfig.email}`} className="text-gold hover:underline">{siteConfig.email}</a></p>
+            {siteConfig.phone && <p><a href={`tel:${siteConfig.phone}`} className="text-gold hover:underline">{siteConfig.phone}</a></p>}
+          </div>
+          <Link to="/" className="inline-block mt-10 px-8 py-3 bg-gold text-black font-semibold rounded-lg hover:bg-yellow-500 transition-colors">
+            Return to Home
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-white">
-      <Toaster position="top-center" richColors />
       {isProcessingPayment && <LoadingSpinner message="Processing your booking..." />}
-      <PageMeta
+      <SEO
         title="Book Your Airport Shuttle Now - Instant Quote & Online Booking"
         description="Book your airport shuttle online with instant live pricing. Auckland, Hamilton, Whangarei airport transfers. Easy online booking, secure payment, live price calculator. Book your shuttle service now!"
+        keywords="book airport shuttle, book airport transfer, online shuttle booking, airport shuttle booking online, instant quote shuttle, book shuttle Auckland, airport transfer booking, shuttle service booking"
+        canonical="/book-now"
       />
       {/* Hero Section */}
       <section className="pt-32 pb-16 bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden">
@@ -407,18 +449,16 @@ export const BookNow = () => {
                           <MapPin className="w-4 h-4 text-gold" />
                           <span>Service Type *</span>
                         </Label>
-                        <select
-                          id="serviceType"
-                          value={formData.serviceType}
-                          onChange={(e) => handleSelectChange('serviceType', e.target.value)}
-                          required
-                          className={SELECT_CLASS}
-                        >
-                          <option value="" disabled>Select service</option>
-                          {serviceOptions.map(option => (
-                            <option key={option.value} value={option.value}>{option.label}</option>
-                          ))}
-                        </select>
+                        <Select onValueChange={(value) => handleSelectChange('serviceType', value)} required>
+                          <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-gold">
+                            <SelectValue placeholder="Select service" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {serviceOptions.map(option => (
+                              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       {/* Pickup Address */}
@@ -480,12 +520,12 @@ export const BookNow = () => {
                           <CustomDatePicker
                             selected={pickupDate}
                             onChange={(date) => {
-                              setPickupDate(date)
+                              setPickupDate(date);
                               if (date) {
-                                const year = date.getFullYear()
-                                const month = String(date.getMonth() + 1).padStart(2, '0')
-                                const day = String(date.getDate()).padStart(2, '0')
-                                setFormData(prev => ({ ...prev, date: `${year}-${month}-${day}` }))
+                                const year = date.getFullYear();
+                                const month = String(date.getMonth() + 1).padStart(2, '0');
+                                const day = String(date.getDate()).padStart(2, '0');
+                                setFormData(prev => ({ ...prev, date: `${year}-${month}-${day}` }));
                               }
                             }}
                             placeholder="Select pickup date"
@@ -500,11 +540,11 @@ export const BookNow = () => {
                           <CustomTimePicker
                             selected={pickupTime}
                             onChange={(time) => {
-                              setPickupTime(time)
+                              setPickupTime(time);
                               if (time) {
-                                const hours = time.getHours().toString().padStart(2, '0')
-                                const minutes = time.getMinutes().toString().padStart(2, '0')
-                                setFormData(prev => ({ ...prev, time: `${hours}:${minutes}` }))
+                                const hours = time.getHours().toString().padStart(2, '0');
+                                const minutes = time.getMinutes().toString().padStart(2, '0');
+                                setFormData(prev => ({ ...prev, time: `${hours}:${minutes}` }));
                               }
                             }}
                             placeholder="Select pickup time"
@@ -519,17 +559,20 @@ export const BookNow = () => {
                           <Users className="w-4 h-4 text-gold" />
                           <span>Number of Passengers *</span>
                         </Label>
-                        <select
-                          id="passengers"
+                        <Select
                           value={formData.passengers}
-                          onChange={(e) => handleSelectChange('passengers', e.target.value)}
+                          onValueChange={(value) => handleSelectChange('passengers', value)}
                           required
-                          className={SELECT_CLASS}
                         >
-                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(num => (
-                            <option key={num} value={num.toString()}>{num} {num === 1 ? 'Passenger' : 'Passengers'}</option>
-                          ))}
-                        </select>
+                          <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-gold">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[1,2,3,4,5,6,7,8,9,10,11].map(num => (
+                              <SelectItem key={num} value={num.toString()}>{num} {num === 1 ? 'Passenger' : 'Passengers'}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <p className="text-xs text-gray-500 mt-1">1st passenger included, $5 per additional passenger</p>
                       </div>
 
@@ -553,7 +596,7 @@ export const BookNow = () => {
                       </div>
 
                       {/* Oversized Luggage Service */}
-                      <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <div className="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
                         <div className="flex items-start space-x-3">
                           <input
                             type="checkbox"
@@ -572,7 +615,7 @@ export const BookNow = () => {
                       </div>
 
                       {/* Gold Card Discount */}
-                      <div className="mb-6 bg-gold/10 p-4 rounded-lg border border-gold/30">
+                      <div className="mb-6 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
                         <div className="flex items-start space-x-3">
                           <input
                             type="checkbox"
@@ -621,11 +664,11 @@ export const BookNow = () => {
                             <CustomTimePicker
                               selected={flightTimePicker}
                               onChange={(time) => {
-                                setFlightTimePicker(time)
+                                setFlightTimePicker(time);
                                 if (time) {
-                                  const hours = time.getHours().toString().padStart(2, '0')
-                                  const minutes = time.getMinutes().toString().padStart(2, '0')
-                                  setFormData(prev => ({ ...prev, flightTime: `${hours}:${minutes}` }))
+                                  const hours = time.getHours().toString().padStart(2, '0');
+                                  const minutes = time.getMinutes().toString().padStart(2, '0');
+                                  setFormData(prev => ({ ...prev, flightTime: `${hours}:${minutes}` }));
                                 }
                               }}
                               placeholder="Select flight time"
@@ -646,12 +689,12 @@ export const BookNow = () => {
                               <CustomDatePicker
                                 selected={returnDatePicker}
                                 onChange={(date) => {
-                                  setReturnDatePicker(date)
+                                  setReturnDatePicker(date);
                                   if (date) {
-                                    const year = date.getFullYear()
-                                    const month = String(date.getMonth() + 1).padStart(2, '0')
-                                    const day = String(date.getDate()).padStart(2, '0')
-                                    setFormData(prev => ({ ...prev, returnDate: `${year}-${month}-${day}` }))
+                                    const year = date.getFullYear();
+                                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                                    const day = String(date.getDate()).padStart(2, '0');
+                                    setFormData(prev => ({ ...prev, returnDate: `${year}-${month}-${day}` }));
                                   }
                                 }}
                                 placeholder="Select return date"
@@ -666,11 +709,11 @@ export const BookNow = () => {
                               <CustomTimePicker
                                 selected={returnTimePicker}
                                 onChange={(time) => {
-                                  setReturnTimePicker(time)
+                                  setReturnTimePicker(time);
                                   if (time) {
-                                    const hours = time.getHours().toString().padStart(2, '0')
-                                    const minutes = time.getMinutes().toString().padStart(2, '0')
-                                    setFormData(prev => ({ ...prev, returnTime: `${hours}:${minutes}` }))
+                                    const hours = time.getHours().toString().padStart(2, '0');
+                                    const minutes = time.getMinutes().toString().padStart(2, '0');
+                                    setFormData(prev => ({ ...prev, returnTime: `${hours}:${minutes}` }));
                                   }
                                 }}
                                 placeholder="Select return time"
@@ -737,7 +780,7 @@ export const BookNow = () => {
                               <Phone className="w-4 h-4 text-gold" />
                               <span>Phone *</span>
                             </Label>
-                            <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="Your mobile number" required className="transition-all duration-200 focus:ring-2 focus:ring-gold" />
+                            <Input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="021 123 4567" required className="transition-all duration-200 focus:ring-2 focus:ring-gold" />
                           </div>
                         </div>
 
@@ -751,7 +794,7 @@ export const BookNow = () => {
                             {[
                               { value: 'both', label: 'Email + SMS' },
                               { value: 'email', label: 'Email only' },
-                              { value: 'sms', label: 'SMS only' },
+                              { value: 'sms', label: 'SMS only' }
                             ].map(opt => (
                               <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
                                 <input
@@ -887,22 +930,22 @@ export const BookNow = () => {
                       <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
                         <div className="flex items-center gap-3 mb-2">
                           <svg className="w-5 h-5 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                            <path d="M9 12l2 2 4-4" />
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            <path d="M9 12l2 2 4-4"/>
                           </svg>
                           <span className="font-semibold text-gray-800">Secure Payment</span>
                         </div>
                         <p className="text-sm text-gray-600 mb-3">Pay securely with credit/debit card</p>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-[#1A1F71] bg-white border border-gray-200 rounded px-2 py-1">VISA</span>
-                          <span className="text-xs font-bold text-[#EB001B] bg-white border border-gray-200 rounded px-2 py-1">Mastercard</span>
+                          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/100px-Visa_Inc._logo.svg.png" alt="Visa" className="h-6 object-contain" />
+                          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/100px-Mastercard-logo.svg.png" alt="Mastercard" className="h-6 object-contain" />
                           <span className="text-xs text-gray-400 ml-2">Secure payment</span>
                         </div>
                       </div>
 
                       <Button
                         type="submit"
-                        className="w-full mt-6 bg-gold hover:bg-gold-500 text-black font-semibold py-6 text-lg transition-colors duration-200"
+                        className="w-full mt-6 bg-gold hover:bg-gold/90 text-black font-semibold py-6 text-lg transition-colors duration-200"
                         disabled={pricing.calculating || pricing.totalPrice === 0 || isProcessingPayment}
                       >
                         {isProcessingPayment ? 'Processing...' : 'Book Now'}
@@ -916,7 +959,7 @@ export const BookNow = () => {
         </div>
       </section>
     </div>
-  )
-}
+  );
+};
 
-export default BookNow
+export default BookNow;
