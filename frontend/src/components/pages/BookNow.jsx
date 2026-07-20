@@ -148,7 +148,7 @@ export default function BookNow() {
         returnDepartureFlightNumber: form.returnFlightNumber,
       })
 
-      const { data: checkout } = await api.post('/payment/create-checkout', { booking_id: booking.id })
+      const { data: checkout } = await api.post('/payment/create-checkout', { booking_id: booking.id, origin_url: window.location.origin })
       if (checkout.url) { window.location.href = checkout.url; return }
       navigate(`/payment/success?booking_id=${booking.id}`)
     } catch (err) {
