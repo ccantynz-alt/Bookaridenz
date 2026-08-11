@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
-const SITE_URL = 'https://bookaridenz.com'
+const SITE_URL = 'https://www.bookaridenz.com'
 const SITE_NAME = 'Book A Ride NZ'
 const LANGS = ['en', 'zh', 'ja', 'ko', 'es', 'fr']
 

@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /payment
 
-Sitemap: https://bookaridenz.com/sitemap.xml
+Sitemap: https://www.bookaridenz.com/sitemap.xml

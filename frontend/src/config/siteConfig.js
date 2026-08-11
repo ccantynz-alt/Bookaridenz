@@ -25,7 +25,7 @@ const configs = {
   'bookaridenz.com': {
     siteName: 'Book A Ride New Zealand',
     domain: 'bookaridenz.com',
-    siteUrl: 'https://bookaridenz.com',
+    siteUrl: 'https://www.bookaridenz.com',
     email: 'international@bookaridenz.com',
     phone: '', // Removed - encourage online booking instead
     tagline: 'New Zealand Airport Transfers for International Travelers',

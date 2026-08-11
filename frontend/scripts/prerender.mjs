@@ -13,7 +13,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ROUTES } from '../src/data/routes.js'
 
-const SITE_URL = 'https://bookaridenz.com'
+const SITE_URL = 'https://www.bookaridenz.com'
 const SITE_NAME = 'Book A Ride NZ'
 const DEFAULT_TITLE = `${SITE_NAME} — Premium Airport Transfers & Shuttle Services`
 const LANGS = ['en', 'zh', 'ja', 'ko', 'es', 'fr']
