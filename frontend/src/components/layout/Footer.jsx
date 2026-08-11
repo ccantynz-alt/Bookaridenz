@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Phone, Mail, MapPin, Facebook, Instagram } from 'lucide-react'
+import { COUNTRIES } from '../../data/countries'
 
 const FOOTER_LINKS = {
   'Quick Links': [
@@ -83,6 +84,18 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-white/10 pt-8 mb-8">
+          <h3 className="text-white font-semibold mb-4 text-sm">Flying From</h3>
+          <div className="flex flex-wrap gap-x-5 gap-y-2.5 mb-8">
+            {Object.entries(COUNTRIES).map(([slug, c]) => (
+              <Link
+                key={slug}
+                to={`/from/${slug}`}
+                className="text-xs text-gray-400 hover:text-gold transition-colors duration-200"
+              >
+                <span className="mr-1.5">{c.flag}</span>{c.name}
+              </Link>
+            ))}
+          </div>
           <div className="flex flex-wrap gap-6 text-sm">
             <a href="mailto:info@bookaride.co.nz" className="flex items-center gap-2 text-gray-400 hover:text-gold transition-colors">
               <Mail className="w-4 h-4 text-gold" /> info@bookaride.co.nz

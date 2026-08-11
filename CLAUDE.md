@@ -36,6 +36,22 @@ prefer re-syncing from that repo over rewriting them.
 - i18n: all customer-facing hero/nav/booking chrome must be translated in all
   six languages (en/zh/ja/ko/es/fr) in `frontend/src/i18n.js`.
 
+## SEO infrastructure
+
+- Country landing pages (`/from/<slug>`) are data-driven from
+  `frontend/src/data/countries.js` — add a country there (with a visually
+  verified hero image) and the route, footer links, audience-page links,
+  prerender snapshot and sitemap entry all follow automatically.
+- `frontend/scripts/prerender.mjs` runs as part of `npm run build`: it writes
+  a static `dist/<route>/index.html` per marketing route (unique title,
+  description, canonical, og tags, hreflang) and generates `dist/sitemap.xml`
+  from `frontend/src/data/routes.js`. Vercel serves these static snapshots
+  before the SPA rewrite, so non-JS crawlers (Baidu, Naver, link previews)
+  see correct per-page HTML. When a page's `<PageMeta>` changes, update its
+  entry in `routes.js` too.
+- Chile was dropped from the country list because no hero image could be
+  visually verified — add it back once a verified image exists.
+
 ## Deploy
 
 Vercel project `bookaridenz` — domains bookaridenz.com (308 → www) and
