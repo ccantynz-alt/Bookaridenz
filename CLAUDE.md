@@ -55,4 +55,16 @@ prefer re-syncing from that repo over rewriting them.
 ## Deploy
 
 Vercel project `bookaridenz` — domains bookaridenz.com (308 → www) and
-www.bookaridenz.com. No environment variables required.
+www.bookaridenz.com (canonical host: **www**). No environment variables
+required.
+
+**IMPORTANT: Vercel production deploys from branch
+`claude/original-website-design-i7xdfz`, NOT `main`.** Pushing `main` only
+creates a Preview deployment. To ship to production, always push both:
+
+    git push origin main
+    git push origin main:claude/original-website-design-i7xdfz
+
+After pushing, verify the deploy actually went live (e.g. check
+`curl -sL https://www.bookaridenz.com/sitemap.xml` reflects your changes) —
+do not assume.
